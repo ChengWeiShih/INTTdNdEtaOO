@@ -1,0 +1,33 @@
+#include <TFile.h>
+#include <TTree.h>
+#include <iostream>
+
+void CreateCentralityDivisionFile() {
+    // 1. Create the ROOT file
+    // Change the path/name as needed
+    // std::string file_name = "cdb_centrality_scale_82391_A.root";
+    TFile *f = new TFile("cdb_centrality_scale_82391_A.root", "RECREATE");
+
+    // 2. Create the TTree named "Multiple"
+    TTree *tree = new TTree("Multiple", "Multiple");
+
+    // 3. Define the variables to hold the data
+    Double_t Dcentralityscale;
+    Int_t IID;
+
+    // 4. Create the branches with the specific types seen in your Print() output
+    // The "D" in /D stands for Double; the "I" in /I stands for Int
+    tree->Branch("Dcentralityscale", &Dcentralityscale, "Dcentralityscale/D");
+    tree->Branch("IID", &IID, "IID/I");
+
+    // 5. Fill the data for Event 0 (matching your Show(0) output)
+    Dcentralityscale = 1.10;
+    IID = 0;
+    tree->Fill();
+
+    // 6. Write and close
+    tree->Write();
+    f->Close();
+
+    std::cout << "File has been created successfully." << std::endl;
+}
