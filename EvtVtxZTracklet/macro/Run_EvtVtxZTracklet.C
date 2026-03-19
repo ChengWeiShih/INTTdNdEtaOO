@@ -17,7 +17,7 @@ void Run_EvtVtxZTracklet(
   bool IsDCACutApplied = 1,
   std::pair<std::pair<double,double>,std::pair<double,double>> DeltaPhiCutInDegree = {{-1.146, 1.146},{-1000.,1000.}}, // note : in degree
   std::pair<std::pair<double,double>,std::pair<double,double>> DCAcutIncm = {{-0.7, 0.7},{-1000.,1000.}}, // note : in cm
-  int ClusAdcCut = 15, // Division: 15 for MC, 30 from Data
+  // int ClusAdcCut = 30, // Division: 15 for MC, 30 from Data
   int ClusPhiSizeCut = 40,
   
   bool PrintRecoDetails = 1,
@@ -35,16 +35,19 @@ void Run_EvtVtxZTracklet(
   // todo :
   // std::pair<double, double> vertexXYIncm_MC = {-0.0218978, 0.223183}; // note : in cm // note : MC HIJING
   // std::pair<double, double> vertexXYIncm_MC = {-0.0216964, 0.223331}; // note : in cm // note : MC HIJING + strangeness
-  std::pair<double, double> vertexXYIncm_MC = {-0.0059375, -0.0025}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
+  std::pair<double, double> vertexXYIncm_MC = {-0.053125, 0.13593800}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
   // std::pair<double, double> vertexXYIncm_MC = {-0.021907, 0.223293}; // note : in cm // note : MC EPOS
 
   std::pair<double, double> vertexXYIncm_data = {-0.0537813, 0.137281}; // note : in cm // note : data {test_82391_INTTsurveyOnly/AvgVtxXY}
 
   std::pair<double, double> vertexXYIncm = (run_num == -1) ? vertexXYIncm_MC : vertexXYIncm_data;
 
+  int ClusAdcCut = (run_num == -1) ? 15 : 30; // Division: 15 for MC, 30 from Data
+
   std::cout<<"RunNumber: "<<run_num<<std::endl;
   std::cout<<"ProcessID: "<<process_id<<std::endl;
   std::cout<<"InputVtxXY: "<<vertexXYIncm.first<<", "<<vertexXYIncm.second<<std::endl;
+  std::cout<<"ClusAdcCut: "<<ClusAdcCut<<std::endl;
 
   EvtVtxZProtoTracklet * evzpt = new EvtVtxZProtoTracklet(
     process_id,

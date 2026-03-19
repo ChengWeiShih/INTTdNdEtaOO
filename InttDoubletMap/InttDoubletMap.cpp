@@ -11,14 +11,21 @@ InttDoubletMap::InttDoubletMap(
     std::string output_file_name_suffix_in,
     std::pair<double, double> vertexXYIncm_in,
 
-    std::pair<bool, TH1D*> vtxZReweight_in,
+    int data_type_in, // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+
     bool BcoFullDiffCut_in,
+    int CentralityBin_in, 
+
+    std::pair<bool, TH1D*> vtxZReweight_in,
     bool INTT_vtxZ_QA_in,
+    std::pair<double, double> VtxZRange_in,
+
+    bool ColMulMask_in,
     std::pair<bool, std::pair<double, double>> isClusQA_in,
-    bool HaveGeoOffsetTag_in,
-    std::pair<bool, int> SetRandomHits_in,
-    bool RandInttZ_in,
-    bool ColMulMask_in
+    double DeltaPhiCut_in,
+
+    bool HaveGeoOffsetTag_in
+    
 ) : ClusHistogram(
     process_id_in,
     runnumber_in,
@@ -40,13 +47,34 @@ InttDoubletMap::InttDoubletMap(
     ColMulMask_in,
 
     1 // note : constructor type
-){
+),
+data_type(data_type_in),
+CentralityBin(CentralityBin_in),
+VtxZRange(VtxZRange_in),
+DeltaPhiCut(DeltaPhiCut_in)
+{
     track_gr = new TGraphErrors();
     fit_rz = new TF1("fit_rz","pol1",-1000,1000);
 
     PrepareOutPutFileName();
     PrepareOutPutRootFile();
     PrepareHistograms();
+
+    cut_GoodProtoTracklet_DeltaPhi.second = DeltaPhiCut;
+
+    if (data_type == 0){isTrigger = true;}
+    if (data_type == 1){isStreamTrig = true;}
+    if (data_type == 2){isStreaming = true;}
+
+    if (CentralityBin == 70) {CentralityRange = {1, 71};}
+    else if (CentralityBin == 100) {CentralityRange = {1, 101};}
+    else {
+        CentralityRange = {
+            centrality_edges[CentralityBin],
+            centrality_edges[CentralityBin + 1]
+        };
+    }
+
 }
 
 void InttDoubletMap::PrepareOutPutFileName()
@@ -65,16 +93,29 @@ void InttDoubletMap::PrepareOutPutFileName()
         output_file_name_suffix = "_" + output_file_name_suffix;
     }
 
-    output_filename = "DoubletMap";
+    output_filename = "INTTDoublets";
     output_filename = (runnumber != -1) ? "Data_" + output_filename : "MC_" + output_filename;
-    output_filename += (vtxZReweight.first) ? "_vtxZReweight" : "";
+
+    if (data_type == 0){output_filename += "_Trigger";}
+    if (data_type == 1){output_filename += "_StreamTrig";}
+    if (data_type == 2){output_filename += "_Streaming";}
+
     output_filename += (BcoFullDiffCut && runnumber != -1) ? "_BcoFullDiffCut" : "";
+    output_filename += Form("_CentralityRange%d_%d", CentralityRange.first - 1, CentralityRange.second - 1);
+
+    output_filename += (vtxZReweight.first) ? "_vtxZReweight" : "";
     output_filename += (INTT_vtxZ_QA) ? "_VtxZQA" : "";
-    output_filename += (isClusQA.first) ? Form("_ClusQAAdc%.0fPhiSize%.0f",isClusQA.second.first,isClusQA.second.second) : "";
+    output_filename += Form("_VtxZRange%sto%s", DoubleToPString(VtxZRange.first,0).c_str(), DoubleToPString(VtxZRange.second,0).c_str());
+
     output_filename += (ColMulMask) ? "_ColMulMask" : "";
+    output_filename += (isClusQA.first) ? Form("_ClusQAAdc%.0fPhiSize%.0f",isClusQA.second.first,isClusQA.second.second) : "";
+    output_filename += Form("_DeltaPhiCut%s", DoubleToPString(DeltaPhiCut,3).c_str());
+
     output_filename += (HaveGeoOffsetTag) ? "_GeoOffset" : "";
+
     output_filename += (SetRandomHits.first) ? Form("_Rand%dHits",SetRandomHits.second) : "";
     output_filename += (RandInttZ) ? "_RandInttZ" : "";
+
     output_filename += output_file_name_suffix;
     output_filename += (runnumber != -1) ? Form("_%s_%s.root",runnumber_str.c_str(),job_index.c_str()) : Form("_%s.root",job_index.c_str());
 }
@@ -88,7 +129,7 @@ void InttDoubletMap::PrepareHistograms()
 {   
     // Division : ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    for (int eta_bin = 0; eta_bin < 10; eta_bin++)
+    for (int eta_bin = 0; eta_bin < 11; eta_bin++)
     {
         for (int vtxz_bin = 0; vtxz_bin < 1; vtxz_bin++)
         {
@@ -141,7 +182,7 @@ void InttDoubletMap::PrepareHistograms()
     
     
     h1D_eta_template_wide = new TH1D("h1D_eta_template_wide", "h1D_eta_template_wide", nEtaBin, EtaEdge_min, EtaEdge_max); // note : coarse
-    h1D_eta_bin = new TH1D("h1D_eta_bin","h1D_eta_bin;Pair #eta;Entries",10,-1,1);
+    h1D_eta_bin = new TH1D("h1D_eta_bin","h1D_eta_bin;Pair #eta;Entries",11,-1.1,1.1);
     h1D_phi_bin = new TH1D("h1D_phi_bin","h1D_phi_bin;Phi [radian];Entries",16,-3.2,3.2);
     h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count;Entries",1,0.5,1.5);
 
@@ -154,7 +195,13 @@ void InttDoubletMap::PrepareHistograms()
 
     h1D_map.insert( std::make_pair(
             Form("h1D_Truth_ChargedHadron"),
-            new TH1D(Form("h1D_Truth_ChargedHadron"), Form("h1D_Truth_ChargedHadron_Eta;Number of Charged Hadrons;Entries"), 200, 0, 1000)
+            new TH1D(Form("h1D_Truth_ChargedHadron"), Form("h1D_Truth_ChargedHadron;Number of Charged Hadrons;Entries"), 200, 0, 1000)
+        )
+    ).second;
+
+    h1D_map.insert( std::make_pair(
+            Form("h1D_InttVtxZ"),
+            new TH1D(Form("h1D_InttVtxZ"), Form("h1D_InttVtxZ;INTT z-vertex [cm];Entries"), 100, -50, 50)
         )
     ).second;
 
@@ -166,19 +213,25 @@ void InttDoubletMap::PrepareHistograms()
 
     h2D_map.insert( std::make_pair(
             Form("h2D_GoodProtoTracklet_EtaPhi"),
-            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi"), Form("h2D_GoodProtoTracklet_EtaPhi;Pair #eta;Phi [radian]"), 10,-1,1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi"), Form("h2D_GoodProtoTracklet_EtaPhi;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
         )
     );
 
     h2D_map.insert( std::make_pair(
             Form("h2D_GoodProtoTracklet_EtaPhi_rotated"),
-            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi_rotated"), Form("h2D_GoodProtoTracklet_EtaPhi_rotated;Pair #eta;Phi [radian]"), 10,-1,1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi_rotated"), Form("h2D_GoodProtoTracklet_EtaPhi_rotated;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
         )
     );
 
     h2D_map.insert( std::make_pair(
             Form("h2D_Truth_ChargedHadron_EtaPhi"),
-            new TH2D(Form("h2D_Truth_ChargedHadron_EtaPhi"), Form("h2D_Truth_ChargedHadron_EtaPhi;Charged hadron #eta;Charged hadron Phi [radian]"), 10,-1,1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_Truth_ChargedHadron_EtaPhi"), Form("h2D_Truth_ChargedHadron_EtaPhi;Charged hadron #eta;Charged hadron Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
+        )
+    );
+
+    h2D_map.insert( std::make_pair(
+            Form("h2D_Clus_ColumnZID_LayerPhiID"),
+            new TH2D(Form("h2D_Clus_ColumnZID_LayerPhiID"), Form("h2D_Clus_ColumnZID_LayerPhiID;Clus Column ZID;Layer x 20 + LadderPhiID"), 26,0,26, 90,0,90) 
         )
     );
 }
@@ -488,12 +541,13 @@ void InttDoubletMap::MainProcess()
         // if (runnumber == -1 && NTruthVtx != 1) {continue;}
 
         // note : both data and MC
-        // if (is_min_bias != 1) {continue;}
-        if (MBD_z_vtx != MBD_z_vtx) {continue;}
-        // if (MBD_centrality != MBD_centrality) {continue;}
-        // if (MBD_centrality < 0 || MBD_centrality > 100) {continue;}
+        if ( (isTrigger || isStreamTrig) && is_min_bias != 1) {continue;}
+        if ( (isTrigger || isStreamTrig) && MBD_centrality != MBD_centrality) {continue;}
+        if ( (isTrigger || isStreamTrig) && (MBD_centrality < 0 || MBD_centrality > 100)) {continue;}
+        if ( (isTrigger || isStreamTrig) && MBD_z_vtx != MBD_z_vtx) {continue;}
+        if ( (isTrigger || isStreamTrig) && (MBD_z_vtx < cut_GlobalMBDvtxZ.first || MBD_z_vtx > cut_GlobalMBDvtxZ.second)) {continue;} // todo: the hard cut 60 cm 
+
         if (INTTvtxZ != INTTvtxZ) {continue;}
-        if (MBD_z_vtx < cut_GlobalMBDvtxZ.first || MBD_z_vtx > cut_GlobalMBDvtxZ.second) {continue;} // todo: the hard cut 60 cm 
         // =======================================================================================================================================================
 
         if (runnumber == 82391){
@@ -502,6 +556,10 @@ void InttDoubletMap::MainProcess()
                 continue;
             }
         }
+
+        // todo: it could be 1, or 0, be careful
+        if (isStreamTrig && BunchNumber != 0) {continue;} // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
+        if (isStreaming  && BunchNumber == 0) {continue;}   // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
 
         if (runnumber != -1 && BunchNumber > 5000){continue;}
 
@@ -513,7 +571,26 @@ void InttDoubletMap::MainProcess()
         if (INTT_vtxZ_QA && (INTTvtxZError < cut_INTTvtxZError.first || INTTvtxZError > cut_INTTvtxZError.second)){continue;}
         // =======================================================================================================================================================
 
-        if (INTTvtxZ < -10 || INTTvtxZ > 10){continue;}
+        if (INTTvtxZ < VtxZRange.first || INTTvtxZ > VtxZRange.second){continue;}
+
+        if ((isTrigger || isStreamTrig) && (MBD_centrality < CentralityRange.first || MBD_centrality >= CentralityRange.second) ){continue;}
+
+        if (vtxZReweight.first && runnumber != -1){
+            std::cout<<"Should not have the vtxZ weighting from the data"<<std::endl;
+            exit(1);
+        }
+
+        double INTTvtxZWeighting;
+        if (vtxZReweight.first && h1D_INTT_vtxZ_reweighting != nullptr){
+            INTTvtxZWeighting = h1D_INTT_vtxZ_reweighting -> GetBinContent(h1D_INTT_vtxZ_reweighting -> FindBin(INTTvtxZ));
+        }
+        else if (vtxZReweight.first && h1D_INTT_vtxZ_reweighting == nullptr){
+            std::cout << "ApplyVtxZReWeighting is true, but h1D_INTT_vtxZ_reweighting is nullptr" << std::endl;
+            exit(1);
+        }
+        else {
+            INTTvtxZWeighting = 1.0;
+        }
 
 
         if (runnumber == -1){
@@ -530,15 +607,24 @@ void InttDoubletMap::MainProcess()
             h1D_map["h1D_Truth_ChargedHadron"] -> Fill(NHadrons);
         }
         
+        h1D_map["h1D_InttVtxZ"] -> Fill(INTTvtxZ, INTTvtxZWeighting);
+
+        for (ClusHistogram::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
+            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
+        }
+
+        for (ClusHistogram::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
+            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
+        } 
 
         PrepareClusterVec();
         
 
         GetTrackletPair(evt_TrackletPair_vec, false);
-        FillPairs(evt_TrackletPair_vec, false, -999, -999, -999, i);
+        FillPairs(evt_TrackletPair_vec, false, -999, -999, INTTvtxZWeighting, i);
 
         GetTrackletPair(evt_TrackletPairRotate_vec, true);  
-        FillPairs(evt_TrackletPairRotate_vec, true, -999, -999, -999, i);
+        FillPairs(evt_TrackletPairRotate_vec, true, -999, -999, INTTvtxZWeighting, i);
 
         h1D_nEvent -> Fill(1);
     }

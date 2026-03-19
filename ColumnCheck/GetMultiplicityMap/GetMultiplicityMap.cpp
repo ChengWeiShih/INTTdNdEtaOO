@@ -254,7 +254,7 @@ void GetMultiplicityMap::h2DNormalized()
         temp_h2D_data -> Sumw2(true);
         temp_h2D_MC -> Sumw2(true);
 
-        temp_h2D_data -> Scale(1. / temp_h2D_data -> GetBinContent(temp_h2D_data -> GetMaximumBin()));
+        temp_h2D_data -> Scale(1. / temp_h2D_data -> GetBinContent(temp_h2D_data -> GetMaximumBin())); // note : this should work assuming there is no hot channel
         temp_h2D_MC -> Scale(1. / temp_h2D_MC -> GetBinContent(temp_h2D_MC -> GetMaximumBin()));
     }
 }

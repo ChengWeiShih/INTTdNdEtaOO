@@ -108,7 +108,7 @@ class GetMultiplicityMap{
         TH2D * h2D_RatioMap;
 
         // note : for constant
-        std::pair<double,double> Ratio_cut_pair = {0.8, 1.2};
+        std::pair<double,double> Ratio_cut_pair = {0.7, 1.3};
 
         double sensor_width = 1.9968; // note : in cm
         int nZbin = Constants::nZbin;

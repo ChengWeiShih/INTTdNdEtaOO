@@ -134,8 +134,8 @@ int GetTriggeredPeak(string bco_map_file){
 int INTTRawHit_check_BarrelNIM(
     int process_id = 0,
     int run_num = 82391,
-    int nevents = -1,
-    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82391_ana534_Centrality_20260210",
+    int nevents = 3000,
+    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos",
   
     // note : for macro
     string input_directory = "/sphenix/lustre01/sphnxpro/production/run3oo/physics/ana537_nocdbtag_v001",
@@ -345,13 +345,13 @@ int INTTRawHit_check_BarrelNIM(
 
 
     MinimumBiasClassifier *mb = new MinimumBiasClassifier();
-    mb->Verbosity(11110);
+    // mb->Verbosity(11110);
     mb->setSpecies(MinimumBiasInfo::SPECIES::OO);
     mb->setOverwriteScale("/sphenix/user/dlis/Projects/centrality/cdb/calibrations26_full/scales/cdb_centrality_scale_82391.root");
     se->registerSubsystem(mb);
 
     CentralityReco *cr = new CentralityReco();
-    cr->Verbosity(11110);
+    // cr->Verbosity(11110);
     cr->setOverwriteScale("/sphenix/user/dlis/Projects/centrality/cdb/calibrations26_full/scales/cdb_centrality_scale_82391.root");
     se->registerSubsystem(cr);
 

@@ -60,9 +60,9 @@ namespace Constants{
 
     // note : for the column multiplicity correction
     // note : this is for the ZID
-    int nZbin = 100;
-    double Zmin = -25;
-    double Zmax = 25;
+    int nZbin = 26;
+    double Zmin = 0;
+    double Zmax = 26;
 
     // note : almost no change
     double EtaEdge_min = -2.7; // note : used by RestDist.h

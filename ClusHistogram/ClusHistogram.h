@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <numeric>
+#include <iomanip>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -105,6 +106,8 @@ class ClusHistogram{
             double x;
             double y;
             double z;
+            double local_x;
+            double local_y;
 
             int index;
 
@@ -113,6 +116,7 @@ class ClusHistogram{
             int sensorZID;
             int ladderPhiID;
             int layerID;
+            int columnZID;
 
             double eta_INTTz;
             // double eta_MBDz;
@@ -121,8 +125,11 @@ class ClusHistogram{
             // double eta_TrueXYZ;
             // double phi_TrueXY;
         };
-
+        
+        std::string DoubleToPString(double val, int precision = 2);
+        int GetGlobalZIndex(int ClusLadderZId_in, float ClusLocalZ_in);
         void PrepareClusterVec();
+        
         virtual void EvtCleanUp();
         std::vector<clu_info> evt_sPH_inner_nocolumn_vec;
         std::vector<clu_info> evt_sPH_outer_nocolumn_vec;
@@ -205,6 +212,8 @@ class ClusHistogram{
         std::vector<float> *ClusX;
         std::vector<float> *ClusY;
         std::vector<float> *ClusZ;
+        std::vector<float> *ClusLocalX;
+        std::vector<float> *ClusLocalY;
         std::vector<int> *ClusLayer;
         std::vector<unsigned char> *ClusLadderZId;
         std::vector<unsigned char> *ClusLadderPhiId;

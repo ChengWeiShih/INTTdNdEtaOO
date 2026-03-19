@@ -92,13 +92,13 @@ int INTTRawHit_check_BarrelNIM_SurveyOnly_CentralityTest(
     int process_id = 0,
     int run_num = 82400,
     int nevents = -1,
-    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest",
+    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex",
   
     // note : for macro
     string input_directory = "/sphenix/lustre01/sphnxpro/mdc2/shijing_hepmc/OO_0_15fm/nopileup",
     string input_filename = "I_am_cool",
 
-    string output_file_name_suffix_in = "test_surveyonly_centralitytest"
+    string output_file_name_suffix_in = "ana538_CdbTagProdA_2024"
 ){
     TStopwatch* watch = new TStopwatch();
     watch->Start();
@@ -111,10 +111,10 @@ int INTTRawHit_check_BarrelNIM_SurveyOnly_CentralityTest(
     job_index.insert(0, job_index_len - job_index.size(), '0');
 
     string output_ntuple_name = Form("MC_HIJING_Ntuple_000%d_%s_%s.root", run_num, output_file_name_suffix_in.c_str(), job_index.c_str());
-    string input_MBDEPD  = Form("%s/mbdepd/run0034/DST_MBD_EPD_sHijing_OO_0_15fm-0000000034-%s.root"          , input_directory.c_str(), job_index.c_str());
-    // string input_track   = Form("%s/trkrcluster/run0034/DST_TRKR_CLUSTER_sHijing_OO_0_15fm-0000000034-%s.root", input_directory.c_str(), job_index.c_str());
-    string input_track   = Form("%s/trkrhit/run0034/DST_TRKR_HIT_sHijing_OO_0_15fm-0000000034-%s.root", input_directory.c_str(), job_index.c_str());
-    string input_truth   = Form("%s/trkrhit/run0034/DST_TRUTH_sHijing_OO_0_15fm-0000000034-%s.root"           , input_directory.c_str(), job_index.c_str());
+    string input_MBDEPD  = Form("%s/mbdepd/run0037/DST_MBD_EPD_sHijing_OO_0_15fm-0000000037-%s.root"          , input_directory.c_str(), job_index.c_str());
+    // string input_track   = Form("%s/trkrcluster/run0037/DST_TRKR_CLUSTER_sHijing_OO_0_15fm-0000000037-%s.root", input_directory.c_str(), job_index.c_str());
+    string input_track   = Form("%s/trkrhit/run0037/DST_TRKR_HIT_sHijing_OO_0_15fm-0000000037-%s.root", input_directory.c_str(), job_index.c_str());
+    string input_truth   = Form("%s/trkrhit/run0037/DST_TRUTH_sHijing_OO_0_15fm-0000000037-%s.root"           , input_directory.c_str(), job_index.c_str());
 
     std::cout<<"input_MBDEPD: "<<input_MBDEPD<<std::endl;
     std::cout<<"input_track: "<<input_track<<std::endl;

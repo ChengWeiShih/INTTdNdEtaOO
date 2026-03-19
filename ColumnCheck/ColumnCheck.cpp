@@ -160,16 +160,16 @@ void ColumnCheck::MainProcess()
 
             for (ClusHistogram::clu_info this_clu : this_vec)
             {
-                int ZID = h1D_map["h1D_ClusZ"] -> Fill(this_clu.z) - 1;
+                int ZID = h1D_map["h1D_ClusZ"] -> Fill(this_clu.columnZID) - 1;
                 if (ZID == -2) {continue;}
 
                 double ClusRadius = sqrt(pow(this_clu.x - vertexXYIncm.first,2) + pow(this_clu.y - vertexXYIncm.second,2));
                 double ColumnLength = (this_clu.sensorZID == typeA_sensorZID[0] || this_clu.sensorZID == typeA_sensorZID[1]) ? typeA_sensor_half_length_incm : typeB_sensor_half_length_incm;
 
                 h2D_map[Form("h2D_ClusCountLayerPhiId_ZId%d",ZID)] -> Fill(this_clu.layerID, this_clu.ladderPhiID, 1. / (ColumnLength));
-                h2D_map[Form("h2D_ClusCountPhiIdZId_Layer%d",this_clu.layerID)] -> Fill(this_clu.ladderPhiID, this_clu.z, 1. / (ColumnLength));
-                h2D_map[Form("h2D_ClusRadiusZID_Layer%d_PhiId%d",this_clu.layerID,this_clu.ladderPhiID)] -> Fill(ClusRadius, this_clu.z, 1. / (ColumnLength));
-                h2D_map[Form("h2D_ClusRadiusZID_All")] -> Fill(ClusRadius, this_clu.z, 1. / (ColumnLength));
+                h2D_map[Form("h2D_ClusCountPhiIdZId_Layer%d",this_clu.layerID)] -> Fill(this_clu.ladderPhiID, ZID, 1. / (ColumnLength));
+                h2D_map[Form("h2D_ClusRadiusZID_Layer%d_PhiId%d",this_clu.layerID,this_clu.ladderPhiID)] -> Fill(ClusRadius, ZID, 1. / (ColumnLength));
+                h2D_map[Form("h2D_ClusRadiusZID_All")] -> Fill(ClusRadius, ZID, 1. / (ColumnLength));
             }
         }
     }

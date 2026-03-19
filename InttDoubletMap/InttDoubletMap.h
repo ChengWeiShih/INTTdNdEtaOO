@@ -1,7 +1,6 @@
 #ifndef INTTDOUBLETMAP_H
 #define INTTDOUBLETMAP_H
 
-
 #include "../ClusHistogram/ClusHistogram.h"
 
 #include "../EvtVtxZTracklet/structure.h"
@@ -21,14 +20,20 @@ class InttDoubletMap : public ClusHistogram{
             std::string output_file_name_suffix_in,
             std::pair<double, double> vertexXYIncm_in,
 
-            std::pair<bool, TH1D*> vtxZReweight_in,
+            int data_type_in, // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+
             bool BcoFullDiffCut_in,
+            int CentralityBin_in, 
+
+            std::pair<bool, TH1D*> vtxZReweight_in,
             bool INTT_vtxZ_QA_in,
-            std::pair<bool, std::pair<double, double>> isClusQA_in, // note : {adc, phi size}
-            bool HaveGeoOffsetTag_in,
-            std::pair<bool, int> SetRandomHits_in = {false, 0},
-            bool RandInttZ_in = false,
-            bool ColMulMask_in = true
+            std::pair<double, double> VtxZRange_in,
+
+            bool ColMulMask_in,
+            std::pair<bool, std::pair<double, double>> isClusQA_in,
+            double DeltaPhiCut_in,
+
+            bool HaveGeoOffsetTag_in
         );
 
         void MainProcess() override; 
@@ -47,6 +52,16 @@ class InttDoubletMap : public ClusHistogram{
         TH1D * h1D_eta_bin;
         TH1D * h1D_phi_bin;
         TH1D * h1D_nEvent;
+
+        bool isTrigger = false;
+        bool isStreaming = false;
+        bool isStreamTrig = false;
+
+        int data_type;
+        int CentralityBin;
+        std::pair<double, double> VtxZRange;
+        double DeltaPhiCut;
+        std::pair<double, double> CentralityRange = {std::nan(""), std::nan("")};
 
         // note : ----------------- for the analysis -----------------
         std::vector<pair_str> evt_TrackletPair_vec;
@@ -71,6 +86,9 @@ class InttDoubletMap : public ClusHistogram{
         TF1 * fit_rz;
         std::vector<double> Pair_DeltaPhi_vec;
         std::vector<int> Used_Clus_index_vec;
+
+        std::pair<bool, int> SetRandomHits_in = {false, 0};
+        bool RandInttZ_in = false;
 
 
         // note : ----------------- for constants -----------------

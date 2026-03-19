@@ -134,6 +134,8 @@ void ClusHistogram::PrepareInputRootFile()
     ClusX = 0;
     ClusY = 0;
     ClusZ = 0;
+    ClusLocalX = 0;
+    ClusLocalY = 0;
     ClusLayer = 0;
     ClusLadderZId = 0;
     ClusLadderPhiId = 0;
@@ -176,6 +178,8 @@ void ClusHistogram::PrepareInputRootFile()
     tree_in -> SetBranchAddress("ClusX", &ClusX);
     tree_in -> SetBranchAddress("ClusY", &ClusY);
     tree_in -> SetBranchAddress("ClusZ", &ClusZ);
+    tree_in -> SetBranchAddress("ClusLocalX", &ClusLocalX);
+    tree_in -> SetBranchAddress("ClusLocalY", &ClusLocalY);
     tree_in -> SetBranchAddress("ClusLayer", &ClusLayer);
     tree_in -> SetBranchAddress("ClusLadderZId", &ClusLadderZId);
     tree_in -> SetBranchAddress("ClusLadderPhiId", &ClusLadderPhiId);
@@ -290,7 +294,7 @@ void ClusHistogram::PrepareHistograms()
 
     h1D_vtxz_template = new TH1D("h1D_vtxz_template", "h1D_vtxz_template", nVtxZBin, VtxZEdge_min, VtxZEdge_max); // note : coarse
 
-    h1D_GoodColMap_ZId = new TH1D("h1D_GoodColMap_ZId","h1D_GoodColMap_ZId;ClusZ [cm];Entries",nZbin, Zmin, Zmax);
+    h1D_GoodColMap_ZId = new TH1D("h1D_GoodColMap_ZId","h1D_GoodColMap_ZId;ClusZID [cm];Entries",nZbin, Zmin, Zmax);
 
     h1D_centrality_map.clear();
     h1D_centrality_map.insert( std::make_pair(
@@ -471,6 +475,10 @@ void ClusHistogram::PrepareClusterVec()
         this_clu.z = ClusZ -> at(clu_i) + geo_offset_map[Form("%i_%i",this_clu.layerID,this_clu.ladderPhiID)][2];
         this_clu.eta_INTTz = get_clu_eta({vertexXYIncm.first, vertexXYIncm.second, INTTvtxZ}, {this_clu.x, this_clu.y, this_clu.z});
 
+        this_clu.local_x = ClusLocalX -> at(clu_i);
+        this_clu.local_y = ClusLocalY -> at(clu_i);
+        this_clu.columnZID = GetGlobalZIndex(ClusLadderZId -> at(clu_i), ClusLocalY -> at(clu_i));
+
         // this_clu.eta_INTTz = ClusEta_INTTz -> at(clu_i);
         // this_clu.eta_MBDz  = ClusEta_MBDz  -> at(clu_i);
         // this_clu.phi_avgXY = ClusPhi_AvgPV -> at(clu_i);
@@ -487,7 +495,10 @@ void ClusHistogram::PrepareClusterVec()
         if (ColMulMask){
             
             // note : start from 1 or -1 for outliers 
-            int GoodColMap_ZId = h1D_GoodColMap_ZId -> Fill(ClusZ -> at(clu_i)); // note : to be free from the geometry offset
+            // int GoodColMap_ZId = h1D_GoodColMap_ZId -> Fill(ClusZ -> at(clu_i)); // note : to be free from the geometry offset
+            // if (GoodColMap_ZId == -1) {continue;}
+
+            int GoodColMap_ZId = h1D_GoodColMap_ZId -> Fill(this_clu.columnZID); // note : to be free from the geometry offset
             if (GoodColMap_ZId == -1) {continue;}
 
             int GoodColMap_XId = (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID + 1; // note : Layer 4, phiID 9 -> 30
@@ -601,7 +612,7 @@ void ClusHistogram::PrepareUniqueClusXYZ()
             if (ColMulMask){
                 
                 // note : start from 1 or -1 for outliers 
-                int GoodColMap_ZId = h1D_GoodColMap_ZId -> Fill(ClusZ -> at(clu_i)); // note : to be free from the geometry offset
+                int GoodColMap_ZId = h1D_GoodColMap_ZId -> Fill(GetGlobalZIndex(ClusLadderZId -> at(clu_i), ClusLocalY -> at(clu_i))); // note : to be free from the geometry offset
                 if (GoodColMap_ZId == -1) {continue;}
 
                 int GoodColMap_XId = (ClusLayer->at(clu_i) - 3) * 20 + ClusLadderPhiId->at(clu_i) + 1; // note : Layer 4, phiID 9 -> 30
@@ -900,4 +911,59 @@ void ClusHistogram::EndRun()
 
     
     file_out -> Close();
+}
+
+int ClusHistogram::GetGlobalZIndex(int ClusLadderZId_in, float ClusLocalZ_in) {
+    const float eps = 0.01; // Tolerance for float comparisons
+    int local_idx = -1;
+    int global_offset = 0;
+
+    if (ClusLadderZId_in == 1 || ClusLadderZId_in == 3) {
+        // These IDs (Outer segments) have 5 chips/variations
+        std::vector<float> bins = {-4.0, -2.0, 0.0, 2.0, 4.0};
+        for (int i = 0; i < (int)bins.size(); ++i) {
+            if (std::fabs(ClusLocalZ_in - bins[i]) < eps) {
+                local_idx = i;
+                break;
+            }
+        }
+        // Offset mapping: ID 1 is the most South (Start), ID 3 is the most North (End)
+        global_offset = (ClusLadderZId_in == 1) ? 0 : 21; 
+    } 
+    else if (ClusLadderZId_in == 0 || ClusLadderZId_in == 2) {
+        // These IDs (Inner segments) have 8 chips/variations
+        std::vector<float> bins = {-5.6, -4.0, -2.4, -0.8, 0.8, 2.4, 4.0, 5.6};
+        for (int i = 0; i < (int)bins.size(); ++i) {
+            if (std::fabs(ClusLocalZ_in - bins[i]) < eps) {
+                local_idx = i;
+                break;
+            }
+        }
+        // Offset mapping: ID 0 follows ID 1, ID 2 follows ID 0
+        global_offset = (ClusLadderZId_in == 0) ? 5 : 13;
+    }
+
+    if (local_idx == -1) return -1; 
+    return global_offset + local_idx;
+}
+
+std::string ClusHistogram::DoubleToPString(double val, int precision) {
+    // 1. Handle the sign
+    bool isNegative = (val < 0);
+    double absVal = std::abs(val);
+
+    // 2. Convert the absolute value to string with fixed precision
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(precision) << absVal;
+    std::string s = out.str();
+
+    // 3. Replace '.' with 'p'
+    std::replace(s.begin(), s.end(), '.', 'p');
+
+    // 4. Prepend 'N' if the original value was negative
+    if (isNegative) {
+        s = "N" + s;
+    }
+
+    return s;
 }

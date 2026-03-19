@@ -9,14 +9,14 @@ job_lease_duration = 86400
 
 runnumber          = 82391
 nEvents            = -1
-input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly/completed
+input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos/completed
 job_offset    = 0
 process_shift      = $(Process) + $(job_offset) 
 input_filename     = Ntuple_00082391_standalone_ana538_$INT(process_shift,%05d).root
-output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly/EvtVtxZ
+output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos/EvtVtxZ
 
 Output             = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).out
 Error              = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).err
 Log                = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).log
 Arguments          = "$INT(process_shift) $(runnumber) $(nEvents) $(output_directory) $(input_directory) $(input_filename)"
-Queue 500
+Queue 1000

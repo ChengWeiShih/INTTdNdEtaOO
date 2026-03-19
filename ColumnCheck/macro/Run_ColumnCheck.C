@@ -1,4 +1,4 @@
-#include "../ColumnCheck.h"
+#include "../ColumnCheck.h" 
 
 R__LOAD_LIBRARY(../libColumnCheck.so)
 
@@ -25,7 +25,7 @@ void Run_ColumnCheck(
 
   // std::pair<double, double> vertexXYIncm_MC = {-0.0218978, 0.223183}; // note : HIJING
   // std::pair<double, double> vertexXYIncm_MC = {-0.0216964, 0.223331}; // note : HIJING + strangeness increase
-  std::pair<double, double> vertexXYIncm_MC = {-0.0059375, -0.0025}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
+  std::pair<double, double> vertexXYIncm_MC = {std::nan(""), std::nan("")}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
   // std::pair<double, double> vertexXYIncm_MC = {-0.021907, 0.223293}; // note : EPOS
 
   std::pair<double, double> vertexXYIncm = (run_num == -1) ? vertexXYIncm_MC : vertexXYIncm_data;
