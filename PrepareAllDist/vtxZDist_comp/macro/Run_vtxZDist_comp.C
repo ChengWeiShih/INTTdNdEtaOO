@@ -9,8 +9,8 @@ int Run_vtxZDist_comp()
     std::string MC_generator = "HIJING"; // note : HIJING+StrangeEnhance
     std::string sPH_labeling = "Internal";
     
-    std::string data_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly/VtxZDist/completed";
-    std::string MC_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest/VtxZDist/completed";
+    std::string data_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos/VtxZDist/completed";
+    std::string MC_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/VtxZDist/completed";
     
     std::string MC_labeling = "Simulation";
     std::string With_and_No = (isVtxZQA) ? "With" : "No";

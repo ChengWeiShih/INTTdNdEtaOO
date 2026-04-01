@@ -1,10 +1,11 @@
-#ifndef EVTVTXZPROTOTRACKLET_H
-#define EVTVTXZPROTOTRACKLET_H
+#ifndef EVTVTXZPROTOTRACKLET_MULTIVTX_H
+#define EVTVTXZPROTOTRACKLET_MULTIVTX_H
 
 #include <iostream>
 #include <vector>
 #include <string>
 #include <numeric>
+#include <set>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -17,23 +18,31 @@
 #include <TPad.h>
 #include <TGraphErrors.h>
 #include <TLatex.h>
-
-#include <TCanvas.h> // note : for the combined case
-#include <TGraph.h>  // note : for the combined case
-
-#include <TRandom.h> // note : for the offset
-#include <TRandom3.h> // note : for the offset
-
+#include <TCanvas.h>
+#include <TGraph.h>
+#include <TRandom.h>
+#include <TRandom3.h>
 #include <TColor.h>
-
 #include <TObjArray.h>
 
-#include "structure.h"
-#include "../Constants.h"
+#include "../structure.h"
+#include "../../Constants.h"
 
-class EvtVtxZProtoTracklet{
+// ============================================================================
+// EvtVtxZProtoTracklet_MultiVtx
+// ----------------------------------------------------------------------------
+// Standalone class (no inheritance) based on EvtVtxZProtoTracklet.
+// Extends the single-vertex reconstruction to find MULTIPLE z-vertices per
+// event by iteratively:
+//   1. Finding a vertex (same trapezoidal + Gaussian fit method as parent)
+//   2. Marking associated cluster pairs (2.5x loose ΔΦ / DCA + z-range overlap)
+//   3. Repeating with the remaining clusters
+//   4. Stopping when the line_breakdown_hist peak drops below 0.05
+// ============================================================================
+
+class EvtVtxZProtoTracklet_MultiVtx {
     public:
-        EvtVtxZProtoTracklet(
+        EvtVtxZProtoTracklet_MultiVtx(
             int process_id_in,
             int runnumber_in,
             int run_nEvents_in,
@@ -49,7 +58,7 @@ class EvtVtxZProtoTracklet{
             std::pair<std::pair<double,double>,std::pair<double,double>> DCAcutIncm_in = {{-1,1},{-1000.,1000.}}, // note : in cm
             int ClusAdcCut_in = 35,
             int ClusPhiSizeCut_in = 8,
-            
+
             bool PrintRecoDetails_in = false,
             bool DrawEvtVtxZ_in = true,
 
@@ -57,7 +66,7 @@ class EvtVtxZProtoTracklet{
             bool RunVtxZReco_in = true,
             bool RunTrackletPair_in = true,
             bool RunTrackletPairRotate_in = true,
-            
+
             bool HaveGeoOffsetTag_in = false
         );
 
@@ -82,6 +91,18 @@ class EvtVtxZProtoTracklet{
             int sensorZID;
             int ladderPhiID;
             int layerID;
+        };
+
+        // note : ---------------------- Result struct for RunSingleVtxReco ----------------------
+        struct VtxFitResult {
+            double vtxZ;
+            double vtxZError;
+            double NgroupTrapezoidal;
+            double NgroupCoarse;
+            double TrapezoidalFitWidth;
+            double TrapezoidalFWHM;
+            double FitHeight;   // note : gaus_fit par[0] + par[3]
+            bool   valid;
         };
 
     // note : ---------------------- For the constructor ----------------------
@@ -120,7 +141,6 @@ class EvtVtxZProtoTracklet{
     void PrepareRootFile();
     std::map<std::string, int> GetInputTreeBranches(TTree * m_tree_in);
 
-    // int event;
     float MBD_z_vtx;
     ULong_t INTT_BCO;
     std::vector<float> *ClusX;
@@ -142,9 +162,6 @@ class EvtVtxZProtoTracklet{
 
     // note : additional branches used for making the vertex Z distribution
     int NTruthVtx;
-    ULong_t GL1Packet_BCO;
-    // bool is_min_bias;
-    // float MBD_centrality;
 
     // note : the flag
     int m_withTrig = false;
@@ -156,7 +173,6 @@ class EvtVtxZProtoTracklet{
     double out_NgroupCoarse;
     double out_TrapezoidalFitWidth;
     double out_TrapezoidalFWHM;
-    double out_FitHeight;
 
     TBranch * b_INTTvtxZ;
     TBranch * b_INTTvtxZError;
@@ -164,7 +180,6 @@ class EvtVtxZProtoTracklet{
     TBranch * b_NgroupCoarse;
     TBranch * b_TrapezoidalFitWidth;
     TBranch * b_TrapezoidalFWHM;
-    TBranch * b_FitHeight;
 
     // note : ---------------------- For the cluster eta and phi ----------------------
     std::vector<double> out_ClusEta_INTTz;
@@ -176,7 +191,7 @@ class EvtVtxZProtoTracklet{
     TBranch * b_ClusEta_INTTz;
     TBranch * b_ClusEta_MBDz;
     TBranch * b_ClusEta_TrueXYZ;
-    
+
     TBranch * b_ClusPhi_AvgPV;
     TBranch * b_ClusPhi_TrueXY;
 
@@ -237,7 +252,7 @@ class EvtVtxZProtoTracklet{
         // note : par[0] : size
         // note : par[1] : mean
         // note : par[2] : width
-        // note : par[3] : offset 
+        // note : par[3] : offset
         return par[0] * TMath::Gaus(x[0],par[1],par[2]) + par[3];
     };
 
@@ -249,9 +264,7 @@ class EvtVtxZProtoTracklet{
     std::vector<clu_info> evt_sPH_outer_nocolumn_vec_PostCut;
     std::vector<std::vector<std::pair<bool,clu_info>>> inner_clu_phi_map_PostCut; // note: phi
     std::vector<std::vector<std::pair<bool,clu_info>>> outer_clu_phi_map_PostCut; // note: phi
-    // std::pair<double, double> m_vertexXYInmm;
-    // std::pair<std::pair<double,double>,std::pair<double,double>> m_DCAcutInmm;
-    
+
     TF1 * gaus_fit; // note : cm
     std::vector<TF1 *> gaus_fit_vec; // note : cm
     std::vector<double> fit_mean_mean_vec;
@@ -259,7 +272,7 @@ class EvtVtxZProtoTracklet{
     std::vector<double> fit_mean_width_vec;
 
     // note : ---------------------- For DrawEvtVtxZ ----------------------
-    TFile * INTTvtxZ_EvtDisplay_file_out = nullptr; 
+    TFile * INTTvtxZ_EvtDisplay_file_out = nullptr;
     TH1D * line_breakdown_hist_zoomin;
     TCanvas * c1;
     TPad * pad_EvtZDist;
@@ -270,7 +283,7 @@ class EvtVtxZProtoTracklet{
 
     // note : ---------------------- For update tree tracklet pair ----------------------
     std::vector<pair_str> out_evt_TrackletPair_vec;
-    std::vector<pair_str> out_evt_TrackletPairRotate_vec;    
+    std::vector<pair_str> out_evt_TrackletPairRotate_vec;
 
     TBranch * b_evt_TrackletPair_vec;
     TBranch * b_evt_TrackletPairRotate_vec;
@@ -310,13 +323,13 @@ class EvtVtxZProtoTracklet{
     const int nLadder_inner = 12;
     const int nLadder_outer = 16;
 
-    const int zvtx_hist_Nbins = 1200;   // note : N bins for each side, regardless the bin at zero 
+    const int zvtx_hist_Nbins = 1200;   // note : N bins for each side, regardless the bin at zero
     const double fine_bin_width = 0.05;  // note : bin width with the unit [cm]
     const std::pair<double,double> evt_possible_z_range = {-70, 70}; // note : [cm]
     const std::pair<double,double> edge_rejection = {-50, 50}; // note : [cm]
     const double typeA_sensor_half_length_incm = 0.8; // note : [cm]
-    const double typeB_sensor_half_length_incm = 1.0; // note : [cm] 
-    const std::vector<int> typeA_sensorZID = {0,2}; // note : sensor Z ID for type A // note -> 1, 0, 2, 3
+    const double typeB_sensor_half_length_incm = 1.0; // note : [cm]
+    const std::vector<int> typeA_sensorZID = {0,2}; // note : sensor Z ID for type A
     const std::vector<std::string> color_code = {
         "#9e0142",
         "#d53e4f",
@@ -327,16 +340,61 @@ class EvtVtxZProtoTracklet{
         "#abdda4",
         "#66c2a5",
         "#3288bd",
-        "#5e4fa2" 
+        "#5e4fa2"
     };
 
     const std::vector<int> ROOT_color_code = {
         51, 61, 70, 79, 88, 98, 100, 113, 120, 129
     };
-    
+
     // note : constants for the INTT vtxZ
     const int number_of_gaus = 7;
 
+    // note : ========== Multi-vertex additions ==========
+
+    // note : ---- New output branches ----
+    std::vector<double> out_vec_INTTvtxZ;
+    std::vector<double> out_vec_INTTvtxZError;
+    std::vector<double> out_vec_NgroupTrapezoidal;
+    std::vector<double> out_vec_NgroupCoarse;
+    std::vector<double> out_vec_TrapezoidalFitWidth;
+    std::vector<double> out_vec_TrapezoidalFWHM;
+    int out_N_INTT_VtxZ = 0;
+
+    TBranch * b_vec_INTTvtxZ           = nullptr;
+    TBranch * b_vec_INTTvtxZError      = nullptr;
+    TBranch * b_vec_NgroupTrapezoidal  = nullptr;
+    TBranch * b_vec_NgroupCoarse       = nullptr;
+    TBranch * b_vec_TrapezoidalFitWidth= nullptr;
+    TBranch * b_vec_TrapezoidalFWHM    = nullptr;
+    TBranch * b_N_INTT_VtxZ            = nullptr;
+
+    // note : fit-height branches
+    double out_FitHeight = std::numeric_limits<double>::quiet_NaN();
+    std::vector<double> out_vec_FitHeight;
+    TBranch * b_FitHeight     = nullptr;
+    TBranch * b_vec_FitHeight = nullptr;
+
+    // note : ---- Cluster bookkeeping ----
+    // Indices (= original ClusX array index) of clusters already associated
+    // to a reconstructed vertex. Accumulate across all iterations per event.
+    std::set<int> used_inner_indices;
+    std::set<int> used_outer_indices;
+
+    // note : ---- Tuning constants ----
+    static constexpr double assoc_cut_factor = 2.5; // loose-cut multiplier for association
+    static constexpr double min_peak_content  = 0.05; // stop if histogram peak <= this
+
+    // note : ---- New methods ----
+    void GetAllINTTvtxZ();
+    void MarkAssociatedClusters(double vtxZ, double vtxZError);
+    VtxFitResult RunSingleVtxReco(
+        const std::vector<clu_info>& inner_vec,
+        const std::vector<clu_info>& outer_vec,
+        int vtx_index,
+        int eID
+    );
+    void EvtCleanUp_Multi();
 };
 
-#endif
+#endif // EVTVTXZPROTOTRACKLET_MULTIVTX_H

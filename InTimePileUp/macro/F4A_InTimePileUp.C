@@ -72,10 +72,10 @@ R__LOAD_LIBRARY(libInTimePileUp.so)
 
 
 int F4A_InTimePileUp(
-    int process_id = 1000,
-    int run_num = 82391,
+    int process_id = 0,
+    int run_num = 54280,
     int nevents = -1,
-    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/InTimePileUp"
+    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Feb102025/Run6_EvtZFitWidthChange/InTimePileUp"
 ){
 
     TStopwatch* watch = new TStopwatch();
@@ -87,9 +87,15 @@ int F4A_InTimePileUp(
     int job_index_len = 5;
     job_index.insert(0, job_index_len - job_index.size(), '0');
 
-    Fun4AllInputManager *in_calo = new Fun4AllDstInputManager("DST_calo");
+    // Fun4AllInputManager *in_calo = new Fun4AllDstInputManager("DST_calo");
+    // in_calo->Verbosity(2);
+    // in_calo->AddFile( Form("/sphenix/lustre01/sphnxpro/production2/run3oo/physics/calofitting/new_newcdbtag_v008/run_00082300_00082400/DST_CALOFITTING_run3oo_new_newcdbtag_v008-00082391-%s.root", job_index.c_str()) );
+    // in_calo->Print("ALL");
+    // se->registerInputManager(in_calo);
+
+    Fun4AllInputManager *in_calo = new Fun4AllDstInputManager("DST_track");
     in_calo->Verbosity(2);
-    in_calo->AddFile( Form("/sphenix/lustre01/sphnxpro/production2/run3oo/physics/calofitting/new_newcdbtag_v008/run_00082300_00082400/DST_CALOFITTING_run3oo_new_newcdbtag_v008-00082391-%s.root", job_index.c_str()) );
+    in_calo->AddFile( Form("/sphenix/lustre01/sphnxpro/production/run2auau/physics/ana464_nocdbtag_v001/DST_STREAMING_EVENT_INTT0/run_00054200_00054300/dst/DST_STREAMING_EVENT_INTT0_run2auau_ana464_nocdbtag_v001-00054280-%s.root", job_index.c_str()) );
     in_calo->Print("ALL");
     se->registerInputManager(in_calo);
 

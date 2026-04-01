@@ -142,6 +142,7 @@ void ClusHistogram::PrepareInputRootFile()
     ClusAdc = 0;
     ClusPhiSize = 0;
     ClusEta_INTTz = 0;
+    firedTriggers = 0;
     
     // evt_TrackletPair_vec = 0;
     // evt_TrackletPairRotate_vec = 0;
@@ -186,6 +187,10 @@ void ClusHistogram::PrepareInputRootFile()
     tree_in -> SetBranchAddress("ClusAdc", &ClusAdc);
     tree_in -> SetBranchAddress("ClusPhiSize", &ClusPhiSize);
     if(branch_map.find("ClusEta_INTTz") != branch_map.end()) {tree_in -> SetBranchAddress("ClusEta_INTTz", &ClusEta_INTTz);}
+
+    if(branch_map.find("Crossing") != branch_map.end()) {tree_in -> SetBranchAddress("Crossing", &crossing);}
+    if(branch_map.find("FPHXBCO") != branch_map.end()) {tree_in -> SetBranchAddress("FPHXBCO", &INTTClus_FPHXBCO);}
+    if (branch_map.find("firedTriggers") != branch_map.end()) {tree_in ->SetBranchAddress("firedTriggers", &firedTriggers);}
 
     // note : INTT vertex Z
     if(branch_map.find("INTTvtxZ") != branch_map.end()) {tree_in -> SetBranchAddress("INTTvtxZ", &INTTvtxZ);}

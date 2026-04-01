@@ -263,6 +263,8 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
         tree_in -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     }
 
+    tree_in -> SetBranchAddress("GL1Packet_BCO", &GL1Packet_BCO);
+
     // tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
     // tree_in -> SetBranchAddress("MBD_centrality", &MBD_centrality);
 
@@ -281,6 +283,7 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
         b_NgroupCoarse = tree_out -> Branch("NgroupCoarse", &out_NgroupCoarse);
         b_TrapezoidalFitWidth = tree_out -> Branch("TrapezoidalFitWidth", &out_TrapezoidalFitWidth);
         b_TrapezoidalFWHM = tree_out -> Branch("TrapezoidalFWHM", &out_TrapezoidalFWHM);
+        b_FitHeight = tree_out -> Branch("FitHeight", &out_FitHeight);
 
         b_ClusEta_INTTz = tree_out -> Branch("ClusEta_INTTz", &out_ClusEta_INTTz);
         b_ClusEta_MBDz = tree_out -> Branch("ClusEta_MBDz", &out_ClusEta_MBDz);
@@ -584,6 +587,7 @@ void EvtVtxZProtoTracklet::GetINTTvtxZ()
   out_NgroupCoarse = N_group_info[0];
   out_TrapezoidalFitWidth = gaus_fit -> GetParameter(2);
   out_TrapezoidalFWHM = (fabs(N_group_info_detail[3] - N_group_info_detail[2]) / 2.);
+  out_FitHeight = gaus_fit -> GetParameter(0) + gaus_fit -> GetParameter(3);
 
   // for (int hist_i = 0; hist_i < line_breakdown_hist->GetNbinsX(); hist_i++){
   //     // std::cout<<"("<<hist_i+1<<", "<<line_breakdown_hist->GetBinContent(hist_i+1)<<"), ";
@@ -950,10 +954,10 @@ void EvtVtxZProtoTracklet::MainProcess()
 
         if (RunInttBcoFullDiff && runnumber != -1){
             if (i != run_nEvents -1){
-                ULong_t this_InttBcoFull = INTT_BCO;
+                ULong_t this_InttBcoFull = GL1Packet_BCO;
 
                 tree_in -> GetEntry(i+1);
-                ULong_t next_InttBcoFull = INTT_BCO;
+                ULong_t next_InttBcoFull = GL1Packet_BCO;
                 
                 out_InttBcoFullDiff_next = next_InttBcoFull - this_InttBcoFull;
 
@@ -1021,6 +1025,7 @@ void EvtVtxZProtoTracklet::EvtCleanUp()
     out_NgroupCoarse = std::nan("");
     out_TrapezoidalFitWidth = std::nan("");
     out_TrapezoidalFWHM = std::nan("");
+    out_FitHeight = std::nan("");
 
     temp_INTTvtxZ = std::nan("");
     temp_INTTvtxZError = std::nan("");

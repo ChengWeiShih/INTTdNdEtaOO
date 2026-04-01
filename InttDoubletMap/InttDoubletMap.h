@@ -21,9 +21,14 @@ class InttDoubletMap : public ClusHistogram{
             std::pair<double, double> vertexXYIncm_in,
 
             int data_type_in, // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+            bool isUsedMBDz_in,
 
             bool BcoFullDiffCut_in,
             int CentralityBin_in, 
+            bool isMinBiasCut_in,
+            bool isTriggerSel_in,
+            std::pair<bool, std::pair<int,int>> isMBDChargeCut_in,
+            std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in,
 
             std::pair<bool, TH1D*> vtxZReweight_in,
             bool INTT_vtxZ_QA_in,
@@ -52,16 +57,23 @@ class InttDoubletMap : public ClusHistogram{
         TH1D * h1D_eta_bin;
         TH1D * h1D_phi_bin;
         TH1D * h1D_nEvent;
+        TH1D * h1D_BunchNumber;
+        TH1D * h1D_MBDChargeSum;
 
         bool isTrigger = false;
         bool isStreaming = false;
         bool isStreamTrig = false;
 
         int data_type;
+        bool isUsedMBDz;
         int CentralityBin;
+        bool isMinBiasCut;
+        bool isTriggerSel;
+        std::pair<bool, std::pair<int,int>> isMBDChargeCut;
+        std::pair<bool, std::pair<int,int>> isBunchNumber_cut;
         std::pair<double, double> VtxZRange;
         double DeltaPhiCut;
-        std::pair<double, double> CentralityRange = {std::nan(""), std::nan("")};
+        std::pair<int, int> CentralityRange = {std::nan(""), std::nan("")};
 
         // note : ----------------- for the analysis -----------------
         std::vector<pair_str> evt_TrackletPair_vec;
@@ -87,8 +99,8 @@ class InttDoubletMap : public ClusHistogram{
         std::vector<double> Pair_DeltaPhi_vec;
         std::vector<int> Used_Clus_index_vec;
 
-        std::pair<bool, int> SetRandomHits_in = {false, 0};
-        bool RandInttZ_in = false;
+        // std::pair<bool, int> SetRandomHits_in = {false, 0};
+        // bool RandInttZ_in = false;
 
 
         // note : ----------------- for constants -----------------

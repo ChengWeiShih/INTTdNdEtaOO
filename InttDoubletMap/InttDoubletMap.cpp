@@ -12,9 +12,14 @@ InttDoubletMap::InttDoubletMap(
     std::pair<double, double> vertexXYIncm_in,
 
     int data_type_in, // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+    bool isUsedMBDz_in,
 
     bool BcoFullDiffCut_in,
-    int CentralityBin_in, 
+    int CentralityBin_in,
+    bool isMinBiasCut_in,
+    bool isTriggerSel_in,
+    std::pair<bool, std::pair<int,int>> isMBDChargeCut_in,
+    std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in,
 
     std::pair<bool, TH1D*> vtxZReweight_in,
     bool INTT_vtxZ_QA_in,
@@ -42,8 +47,8 @@ InttDoubletMap::InttDoubletMap(
     INTT_vtxZ_QA_in,
     isClusQA_in,
     HaveGeoOffsetTag_in,
-    SetRandomHits_in,
-    RandInttZ_in,
+    {false, 0}, // note : SetRandomHits_in is set to {false, 0} for InttDoubletMap
+    false, // note : RandInttZ_in is set to false for InttDoubletMap
     ColMulMask_in,
 
     1 // note : constructor type
@@ -51,14 +56,15 @@ InttDoubletMap::InttDoubletMap(
 data_type(data_type_in),
 CentralityBin(CentralityBin_in),
 VtxZRange(VtxZRange_in),
-DeltaPhiCut(DeltaPhiCut_in)
+DeltaPhiCut(DeltaPhiCut_in),
+isBunchNumber_cut(isBunchNumber_cut_in),
+isMinBiasCut(isMinBiasCut_in),
+isUsedMBDz(isUsedMBDz_in),
+isMBDChargeCut(isMBDChargeCut_in),
+isTriggerSel(isTriggerSel_in)
 {
     track_gr = new TGraphErrors();
     fit_rz = new TF1("fit_rz","pol1",-1000,1000);
-
-    PrepareOutPutFileName();
-    PrepareOutPutRootFile();
-    PrepareHistograms();
 
     cut_GoodProtoTracklet_DeltaPhi.second = DeltaPhiCut;
 
@@ -68,12 +74,47 @@ DeltaPhiCut(DeltaPhiCut_in)
 
     if (CentralityBin == 70) {CentralityRange = {1, 71};}
     else if (CentralityBin == 100) {CentralityRange = {1, 101};}
+    else if (CentralityBin == -1 ) {CentralityRange = {-20, -20};}
     else {
         CentralityRange = {
             centrality_edges[CentralityBin],
             centrality_edges[CentralityBin + 1]
         };
     }
+    std::cout << "process_id : "<<process_id<<std::endl;
+    std::cout << "runnumber: "<< runnumber<<std::endl;
+    std::cout << "run_nEvents: "<< run_nEvents<<std::endl;
+    std::cout << "input_directory: "<< input_directory <<std::endl;
+    std::cout << "input_file_name: "<< input_file_name <<std::endl;
+    std::cout << "output_directory: "<< output_directory <<std::endl;
+    std::cout << "output_file_name_suffix: "<< output_file_name_suffix <<std::endl;
+    std::cout << "vertexXYIncm : "<<vertexXYIncm.first<<", "<<vertexXYIncm.second<<std::endl;
+
+    std::cout << "data_type: " << data_type << std::endl; 
+    std::cout << "isUsedMBDz: " << isUsedMBDz << std::endl;
+
+    std::cout << "BcoFullDiffCut: " << BcoFullDiffCut <<", cut value: "<<cut_InttBcoFullDIff_next<<std::endl;
+    std::cout << "CentralityBin: "<<CentralityBin<<", range: "<<CentralityRange.first<<" - "<<CentralityRange.second<<std::endl;
+    std::cout << "isMinBiasCut: " << isMinBiasCut << std::endl;
+    std::cout << "isTriggerSel: " << isTriggerSel << std::endl;
+    std::cout << "isMBDChargeCut : "<<isMBDChargeCut.first <<", range: "<< isMBDChargeCut.second.first<<", "<<isMBDChargeCut.second.second<<std::endl;
+    std::cout << "isBunchNumber_cut: " << isBunchNumber_cut.first<<", range: "<<isBunchNumber_cut.second.first<<", "<<isBunchNumber_cut.second.second<<std::endl;
+
+    std::cout << "vtxZReweight: " << vtxZReweight.first<<std::endl;
+    std::cout << "INTT_vtxZ_QA: " << INTT_vtxZ_QA<<std::endl;
+    std::cout << "VtxZRange: " << VtxZRange.first<<", "<<VtxZRange.second<<std::endl;
+
+    std::cout << "ColMulMask: " << ColMulMask<<std::endl;
+    std::cout << "isClusQA: " << isClusQA.first<<", ADC: "<< isClusQA.second.first<<", PhiSize: "<<isClusQA.second.second<<std::endl;
+    std::cout << "DeltaPhiCut: " << DeltaPhiCut<<std::endl;
+
+    std::cout << "HaveGeoOffsetTag: " << HaveGeoOffsetTag<<std::endl;
+    std::cout << "RandInttZ: " << RandInttZ<<std::endl;
+    std::cout << "ColMulMask: " << ColMulMask<<std::endl;
+
+    PrepareOutPutFileName();
+    PrepareOutPutRootFile();
+    PrepareHistograms();
 
 }
 
@@ -100,8 +141,14 @@ void InttDoubletMap::PrepareOutPutFileName()
     if (data_type == 1){output_filename += "_StreamTrig";}
     if (data_type == 2){output_filename += "_Streaming";}
 
+    output_filename += ((isTrigger || isStreamTrig) && isUsedMBDz) ? "_UsedMBDz" : "";
+
     output_filename += (BcoFullDiffCut && runnumber != -1) ? "_BcoFullDiffCut" : "";
-    output_filename += Form("_CentralityRange%d_%d", CentralityRange.first - 1, CentralityRange.second - 1);
+    output_filename += ((isTrigger || isStreamTrig) && CentralityBin != -1) ? Form("_CentralityRange%dto%d", CentralityRange.first, CentralityRange.second - 1) : "";
+    output_filename += ((isTrigger || isStreamTrig) && isMinBiasCut) ? "_MinBiasEvt" : ""; 
+    output_filename += ((isTrigger || isStreamTrig) && isTriggerSel) ? "_TriggerSel" : "";
+    output_filename += ((isTrigger || isStreamTrig) && isMBDChargeCut.first) ? Form("_MBDChargeCut%dto%d",isMBDChargeCut.second.first, isMBDChargeCut.second.second) : ""; 
+    output_filename += (runnumber != -1 && (isStreamTrig || isStreaming) && isBunchNumber_cut.first) ? Form("_BunchNumberRange%dto%d", isBunchNumber_cut.second.first, isBunchNumber_cut.second.second) : "";
 
     output_filename += (vtxZReweight.first) ? "_vtxZReweight" : "";
     output_filename += (INTT_vtxZ_QA) ? "_VtxZQA" : "";
@@ -185,6 +232,8 @@ void InttDoubletMap::PrepareHistograms()
     h1D_eta_bin = new TH1D("h1D_eta_bin","h1D_eta_bin;Pair #eta;Entries",11,-1.1,1.1);
     h1D_phi_bin = new TH1D("h1D_phi_bin","h1D_phi_bin;Phi [radian];Entries",16,-3.2,3.2);
     h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count;Entries",1,0.5,1.5);
+    h1D_BunchNumber = new TH1D("h1D_BunchNumber","h1D_BunchNumber;Selected BunchNumber;Entries",150,-20,130);
+    h1D_MBDChargeSum = new TH1D("h1D_MBDChargeSum","h1D_MBDChargeSum;Selected MBD Charged Sum;Entries",250, 0, 500);
 
 
     h1D_map.insert( std::make_pair(
@@ -516,11 +565,15 @@ void InttDoubletMap::MainProcess()
         exit(1);
     }
 
+    std::vector<int> test_count(40,0);
+
     for (int i = 0; i < run_nEvents; i++)
     {
         tree_in -> GetEntry(i);
 
         EvtCleanUp();
+
+        test_count[0] += 1;
 
         if (i % 10 == 0) {std::cout << "Processing event " << i<<", NClus : "<< ClusX -> size()<<", crossing: " << BunchNumber << std::endl;}
 
@@ -533,21 +586,47 @@ void InttDoubletMap::MainProcess()
         // =======================================================================================================================================================
         // note : hard cut
 
+        if ((isTrigger || isStreamTrig) && isUsedMBDz){
+            INTTvtxZ = MBD_z_vtx;
+            INTTvtxZError = 0;
+        }
+
+        if ((isTrigger || isStreamTrig) && isTriggerSel){
+            std::vector<int> this_trigger_vec = *(firedTriggers);
+            if (
+                std::find(this_trigger_vec.begin(), this_trigger_vec.end(), 12) == this_trigger_vec.end() &&
+                std::find(this_trigger_vec.begin(), this_trigger_vec.end(), 13) == this_trigger_vec.end() &&
+                std::find(this_trigger_vec.begin(), this_trigger_vec.end(), 14) == this_trigger_vec.end()
+            ){
+                continue;
+            }
+        }
+
+        test_count[1] += 1;
+
         // note : for data
         if (runnumber != -1 && BcoFullDiffCut && InttBcoFullDiff_next <= cut_InttBcoFullDIff_next) {continue;}
         // if (runnumber != -1 && MBDNSg2 != 1) {continue;} // todo: assume MC no trigger
 
         // note : for MC
         // if (runnumber == -1 && NTruthVtx != 1) {continue;}
+        
+        test_count[2] += 1;
 
         // note : both data and MC
-        if ( (isTrigger || isStreamTrig) && is_min_bias != 1) {continue;}
-        if ( (isTrigger || isStreamTrig) && MBD_centrality != MBD_centrality) {continue;}
-        if ( (isTrigger || isStreamTrig) && (MBD_centrality < 0 || MBD_centrality > 100)) {continue;}
+        if ( (isTrigger || isStreamTrig) && isMinBiasCut && is_min_bias != 1) {continue;}
+        test_count[3] += 1;
+        if ( (isTrigger || isStreamTrig) && CentralityBin != -1 && MBD_centrality != MBD_centrality) {continue;}
+        test_count[4] += 1;
+        if ( (isTrigger || isStreamTrig) && CentralityBin != -1 && (MBD_centrality < 0 || MBD_centrality > 100)) {continue;}
+        test_count[5] += 1;
         if ( (isTrigger || isStreamTrig) && MBD_z_vtx != MBD_z_vtx) {continue;}
+        test_count[6] += 1;
         if ( (isTrigger || isStreamTrig) && (MBD_z_vtx < cut_GlobalMBDvtxZ.first || MBD_z_vtx > cut_GlobalMBDvtxZ.second)) {continue;} // todo: the hard cut 60 cm 
+        test_count[7] += 1;
 
         if (INTTvtxZ != INTTvtxZ) {continue;}
+        test_count[8] += 1;
         // =======================================================================================================================================================
 
         if (runnumber == 82391){
@@ -556,24 +635,42 @@ void InttDoubletMap::MainProcess()
                 continue;
             }
         }
+        test_count[9] += 1;
+
+        if (runnumber != -1 && (isStreaming || isStreamTrig) && isBunchNumber_cut.first) {
+            if (BunchNumber < isBunchNumber_cut.second.first || BunchNumber > isBunchNumber_cut.second.second){continue;}
+        }
+        test_count[10] += 1;
 
         // todo: it could be 1, or 0, be careful
-        if (isStreamTrig && BunchNumber != 0) {continue;} // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
-        if (isStreaming  && BunchNumber == 0) {continue;}   // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
-
-        if (runnumber != -1 && BunchNumber > 5000){continue;}
-
+        if (isStreamTrig && crossing != 0) {continue;} // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
+        test_count[11] += 1;
+        if (isStreaming  && crossing == 0) {continue;}   // note : bunchnumber -> the the crossing value, 0 is the trigger crossing
+        test_count[12] += 1;
+        if (isStreaming  && crossing == 511) {continue;}   // note : the crossing value on the edge //todo: review this cut later
+        test_count[13] += 1;
+        if (runnumber != -1 && crossing > 5000){continue;}
+        test_count[14] += 1;
         // =======================================================================================================================================================
         // note : optional cut
         if (INTT_vtxZ_QA && (MBD_z_vtx - INTTvtxZ < cut_vtxZDiff.first || MBD_z_vtx - INTTvtxZ > cut_vtxZDiff.second) ) {continue;}
+        test_count[15] += 1;
         if (INTT_vtxZ_QA && (TrapezoidalFitWidth < cut_TrapezoidalFitWidth.first || TrapezoidalFitWidth > cut_TrapezoidalFitWidth.second)){continue;}
+        test_count[16] += 1;
         if (INTT_vtxZ_QA && (TrapezoidalFWHM < cut_TrapezoidalFWHM.first || TrapezoidalFWHM > cut_TrapezoidalFWHM.second)){continue;}
+        test_count[17] += 1;
         if (INTT_vtxZ_QA && (INTTvtxZError < cut_INTTvtxZError.first || INTTvtxZError > cut_INTTvtxZError.second)){continue;}
+        test_count[18] += 1;
         // =======================================================================================================================================================
 
         if (INTTvtxZ < VtxZRange.first || INTTvtxZ > VtxZRange.second){continue;}
+        test_count[19] += 1;
 
-        if ((isTrigger || isStreamTrig) && (MBD_centrality < CentralityRange.first || MBD_centrality >= CentralityRange.second) ){continue;}
+        if ((isTrigger || isStreamTrig) && CentralityBin != -1 && (MBD_centrality < CentralityRange.first || MBD_centrality >= CentralityRange.second) ){continue;}
+        test_count[20] += 1;
+
+        if ((isTrigger || isStreamTrig) && isMBDChargeCut.first && (MBD_charge_sum < isMBDChargeCut.second.first || MBD_charge_sum > isMBDChargeCut.second.second)) {continue;}
+        test_count[21] += 1;
 
         if (vtxZReweight.first && runnumber != -1){
             std::cout<<"Should not have the vtxZ weighting from the data"<<std::endl;
@@ -591,6 +688,7 @@ void InttDoubletMap::MainProcess()
         else {
             INTTvtxZWeighting = 1.0;
         }
+        test_count[22] += 1;
 
 
         if (runnumber == -1){
@@ -606,7 +704,15 @@ void InttDoubletMap::MainProcess()
 
             h1D_map["h1D_Truth_ChargedHadron"] -> Fill(NHadrons);
         }
+
+        if (runnumber != -1) {h1D_BunchNumber -> Fill(BunchNumber);}
+
+        if ((isTrigger || isStreamTrig)) {h1D_MBDChargeSum -> Fill(MBD_charge_sum);}
+
+        test_count[23] += 1;
         
+        PrepareClusterVec();
+
         h1D_map["h1D_InttVtxZ"] -> Fill(INTTvtxZ, INTTvtxZWeighting);
 
         for (ClusHistogram::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
@@ -616,17 +722,24 @@ void InttDoubletMap::MainProcess()
         for (ClusHistogram::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
             h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
         } 
-
-        PrepareClusterVec();
         
+        test_count[24] += 1;
 
         GetTrackletPair(evt_TrackletPair_vec, false);
         FillPairs(evt_TrackletPair_vec, false, -999, -999, INTTvtxZWeighting, i);
 
+        test_count[25] += 1;
+
         GetTrackletPair(evt_TrackletPairRotate_vec, true);  
         FillPairs(evt_TrackletPairRotate_vec, true, -999, -999, INTTvtxZWeighting, i);
 
+        test_count[26] += 1;
+
         h1D_nEvent -> Fill(1);
+    }
+
+    for (int ele = 0; ele < test_count.size(); ele++){
+        std::cout<<ele<<", "<<test_count[ele]<<std::endl;
     }
 }
 
@@ -637,12 +750,20 @@ void InttDoubletMap::EndRun()
     h1D_eta_bin -> Write();
     h1D_phi_bin -> Write();
     h1D_nEvent -> Write();
+    h1D_BunchNumber -> Write();
+    h1D_MBDChargeSum -> Write();
 
     for (auto &pair : h2D_map){
+
+        if (runnumber != -1 && pair.first.find("Truth") != std::string::npos) {continue;} // note : if it's data, skip the truth histograms
+
         pair.second -> Write();
     }
 
     for (auto &pair : h1D_map){
+
+        if (runnumber != -1 && pair.first.find("Truth") != std::string::npos) {continue;} // note : if it's data, skip the truth histograms
+
         pair.second -> Write();
     }
 

@@ -201,13 +201,17 @@ class ClusHistogram{
         float MBD_charge_sum;
         float MBD_charge_asymm;
         int InttBcoFullDiff_next;
+        std::vector<int> *firedTriggers;
 
         // note : trigger tag
         int MBDNSg2 = 1;
         int MBDNSg2_vtxZ10cm = 1;
         int MBDNSg2_vtxZ30cm = 1;
         int MBDNSg2_vtxZ60cm = 1;
-        ULong_t BunchNumber;
+        uint64_t BunchNumber;
+
+        int crossing = -1000;
+        int INTTClus_FPHXBCO = -1000;
 
         std::vector<float> *ClusX;
         std::vector<float> *ClusY;

@@ -1,9 +1,27 @@
-int HR_tree_converter(){
+int HR_tree_converter(
+    int process_id = 0,
+    int runnumber = 82699,
+    std::string input_directory  = "/sphenix/user/ChengWei/INTT/HitCarriedOver_Streaming/production/macro/test_run_82699_self/completed",
+    std::string output_directory = "/sphenix/user/ChengWei/INTT/HitCarriedOver_Streaming/production/macro/test_run_82699_self/conversion"
+){
 
-    TFile * file_in = TFile::Open("/sphenix/user/hjheng/sPHENIXRepo/TrackingAnalysis/Silicon_MBD_Vertexing/Silicon_MBD_Comparisons/VertexCompare_run_82405/files/outputVTX_Acts_Default.root");
+    std::string job_index = std::to_string( process_id );
+    int job_index_len = 5;
+    job_index.insert(0, job_index_len - job_index.size(), '0');
+
+    std::string input_filename  = Form("Ntuple_000%d_standalone_ana538_Acts_%s.root",runnumber,job_index.c_str());
+    std::string output_filename = Form("Ntuple_conversion_000%d_standalone_ana538_Acts_%s.root",runnumber,job_index.c_str());
+
+    TFile * file_in = TFile::Open(Form("%s/%s", input_directory.c_str(), input_filename.c_str()));
     TTree * tree_in = (TTree *) file_in -> Get("VTX");
 
-    // int gl1BunchCrossing;
+
+    float centrality_mbd_in;
+    bool is_min_bias_in;
+    float MBD_charge_sum_in;
+    uint64_t gl1BunchCrossing_in;
+    vector<float> * mbdVertex = 0;
+    vector<int> * firedTriggers = 0;
 
     vector<unsigned long> *clusterKey = 0;
     vector<unsigned int> *cluster_layer = 0;
@@ -21,6 +39,9 @@ int HR_tree_converter(){
     vector<int> *cluster_timeBucketID = 0;
     vector<int> *cluster_ladderZId = 0;
     vector<int> *cluster_ladderPhiId = 0;
+    vector<float> *cluster_LocalX = 0;
+    vector<float> *cluster_LocalY = 0;
+    vector<int>   *cluster_FPHXBCO = 0;
 
     vector<int> *trackerVertexId = 0;
     vector<float> *trackerVertexX = 0;
@@ -32,7 +53,13 @@ int HR_tree_converter(){
     vector<short> *trackerVertexCrossing = 0;
     vector<vector<int> > *trackerVertexTrackIDs = 0;
 
-    // tree_in -> SetBranchAddress("gl1BunchCrossing", &gl1BunchCrossing);
+
+    tree_in -> SetBranchAddress("centrality_mbd", &centrality_mbd_in);
+    tree_in -> SetBranchAddress("is_min_bias", &is_min_bias_in);
+    tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum_in);
+    tree_in -> SetBranchAddress("gl1BunchCrossing", &gl1BunchCrossing_in);
+    tree_in -> SetBranchAddress("mbdVertex", &mbdVertex);
+    tree_in -> SetBranchAddress("firedTriggers", &firedTriggers);
 
     tree_in -> SetBranchAddress("clusterKey", &clusterKey);
     tree_in -> SetBranchAddress("cluster_layer", &cluster_layer);
@@ -50,6 +77,9 @@ int HR_tree_converter(){
     tree_in -> SetBranchAddress("cluster_timeBucketID", &cluster_timeBucketID);
     tree_in -> SetBranchAddress("cluster_ladderZId", &cluster_ladderZId);
     tree_in -> SetBranchAddress("cluster_ladderPhiId", &cluster_ladderPhiId);
+    tree_in -> SetBranchAddress("cluster_LocalX", &cluster_LocalX);
+    tree_in -> SetBranchAddress("cluster_LocalY", &cluster_LocalY);
+    tree_in -> SetBranchAddress("cluster_FPHXBCO", &cluster_FPHXBCO);
     
     tree_in -> SetBranchAddress("trackerVertexId", &trackerVertexId);
     tree_in -> SetBranchAddress("trackerVertexX", &trackerVertexX);
@@ -61,15 +91,19 @@ int HR_tree_converter(){
     tree_in -> SetBranchAddress("trackerVertexCrossing", &trackerVertexCrossing);
     tree_in -> SetBranchAddress("trackerVertexTrackIDs", &trackerVertexTrackIDs);
 
-    TFile * file_out = new TFile("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82405/82405_converter.root", "RECREATE");
-    TTree * tree_out = new TTree("EventTree", "Tree for Run 82405");
+    system (Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", output_directory.c_str(), output_filename.c_str(), output_directory.c_str(), output_filename.c_str()));
+
+    TFile * file_out = new TFile(Form("%s/%s",output_directory.c_str(),output_filename.c_str()), "RECREATE");
+    TTree * tree_out = new TTree("EventTree", Form("Tree for Run %d",runnumber));
     // note : MBD & centrality relevant
+    bool is_min_bias;
+    float MBD_centrality;
+    float MBD_charge_sum;
+    vector<int> firedTriggers_out;
+
     float MBD_z_vtx = 0;
-    bool is_min_bias = 1;
-    float MBD_centrality = 1;
     float MBD_south_charge_sum = 100;
     float MBD_north_charge_sum = 100;
-    float MBD_charge_sum = 200;
     float MBD_charge_asymm = 1;
     int InttBcoFullDiff_next = 200;
 
@@ -78,8 +112,10 @@ int HR_tree_converter(){
     int MBDNSg2_vtxZ10cm = 1;
     int MBDNSg2_vtxZ30cm = 1;
     int MBDNSg2_vtxZ60cm = 1;
-    long long BunchNumber;
+    uint64_t BunchNumber;
     int nTrack_vtx;
+    int Crossing_out;
+    int FPHXBCO_out;
 
     long long NClus;
     std::vector<float> ClusX; ClusX.clear();
@@ -88,6 +124,8 @@ int HR_tree_converter(){
     std::vector<int> ClusLayer; ClusLayer.clear();
     std::vector<unsigned char> ClusLadderZId; ClusLadderZId.clear();
     std::vector<unsigned char> ClusLadderPhiId; ClusLadderPhiId.clear();
+    std::vector<float> ClusLocalX; ClusLocalX.clear();
+    std::vector<float> ClusLocalY; ClusLocalY.clear();
     std::vector<int> ClusAdc; ClusAdc.clear();
     std::vector<float> ClusPhiSize; ClusPhiSize.clear();
     std::vector<double> ClusEta_INTTz; ClusEta_INTTz.clear();
@@ -100,6 +138,7 @@ int HR_tree_converter(){
     double TrapezoidalFitWidth = 1;
     double TrapezoidalFWHM = 1;
 
+    tree_out -> Branch("firedTriggers", &firedTriggers_out);
     tree_out -> Branch("MBD_z_vtx", &MBD_z_vtx);
     tree_out -> Branch("is_min_bias", &is_min_bias);
     tree_out -> Branch("MBD_centrality", &MBD_centrality);
@@ -113,10 +152,14 @@ int HR_tree_converter(){
     tree_out -> Branch("MBDNSg2_vtxZ30cm", &MBDNSg2_vtxZ30cm);
     tree_out -> Branch("MBDNSg2_vtxZ60cm", &MBDNSg2_vtxZ60cm);
     tree_out -> Branch("BunchNumber", &BunchNumber);
+    tree_out -> Branch("Crossing", &Crossing_out);
+    tree_out -> Branch("FPHXBCO", &FPHXBCO_out);
     tree_out -> Branch("NClus", &NClus);
     tree_out -> Branch("ClusX", &ClusX);
     tree_out -> Branch("ClusY", &ClusY);
     tree_out -> Branch("ClusZ", &ClusZ);
+    tree_out -> Branch("ClusLocalX", &ClusLocalX);
+    tree_out -> Branch("ClusLocalY", &ClusLocalY);
     tree_out -> Branch("ClusLayer", &ClusLayer);
     tree_out -> Branch("ClusLadderZId", &ClusLadderZId);
     tree_out -> Branch("ClusLadderPhiId", &ClusLadderPhiId);
@@ -141,6 +184,10 @@ int HR_tree_converter(){
     std::map<int, vector<float>> bunchnumber_ClusX_map; bunchnumber_ClusX_map.clear();
     std::map<int, vector<float>> bunchnumber_ClusY_map; bunchnumber_ClusY_map.clear();
     std::map<int, vector<float>> bunchnumber_ClusZ_map; bunchnumber_ClusZ_map.clear();
+    std::map<int, vector<float>> bunchnumber_ClusLocalX_map; bunchnumber_ClusLocalX_map.clear();
+    std::map<int, vector<float>> bunchnumber_ClusLocalY_map; bunchnumber_ClusLocalY_map.clear();
+    std::map<int, vector<int>>   bunchnumber_ClusFPHXBCO_map; bunchnumber_ClusFPHXBCO_map.clear();
+
     std::map<int, vector<int>> bunchnumber_ClusLayer_map; bunchnumber_ClusLayer_map.clear();
     std::map<int, vector<unsigned char>> bunchnumber_ClusLadderZId_map; bunchnumber_ClusLadderZId_map.clear();
     std::map<int, vector<unsigned char>> bunchnumber_ClusLadderPhiId_map; bunchnumber_ClusLadderPhiId_map.clear();
@@ -153,8 +200,18 @@ int HR_tree_converter(){
         tree_in -> GetEntry(i);
 
         if (i%10 == 0){
-            std::cout << "Processing entry " << i << " / " << tree_in->GetEntries() << std::endl;
+            std::cout << "Processing entry " << i << " / " << tree_in->GetEntries() <<", MBD_charge_sum: "<< MBD_charge_sum << std::endl;
         }
+
+        is_min_bias = is_min_bias_in;
+        MBD_centrality = centrality_mbd_in;
+        MBD_charge_sum = MBD_charge_sum_in;
+        BunchNumber = gl1BunchCrossing_in;
+        if (mbdVertex -> size() > 0){
+            MBD_z_vtx = mbdVertex -> at(0);
+        }
+
+        firedTriggers_out = *(firedTriggers);
 
         bunchnumber_vertex_map.clear();
         bunchnumber_tracker_vtxZ.clear();
@@ -163,6 +220,9 @@ int HR_tree_converter(){
         bunchnumber_ClusX_map.clear();
         bunchnumber_ClusY_map.clear();
         bunchnumber_ClusZ_map.clear();
+        bunchnumber_ClusLocalX_map.clear();
+        bunchnumber_ClusLocalY_map.clear();
+        bunchnumber_ClusFPHXBCO_map.clear();
         bunchnumber_ClusLayer_map.clear();
         bunchnumber_ClusLadderZId_map.clear();
         bunchnumber_ClusLadderPhiId_map.clear();
@@ -196,6 +256,9 @@ int HR_tree_converter(){
                 bunchnumber_ClusX_map[crossing] = vector<float>();
                 bunchnumber_ClusY_map[crossing] = vector<float>();
                 bunchnumber_ClusZ_map[crossing] = vector<float>();
+                bunchnumber_ClusLocalX_map[crossing] = vector<float>();
+                bunchnumber_ClusLocalY_map[crossing] = vector<float>();
+                bunchnumber_ClusFPHXBCO_map[crossing] = vector<int>();
                 bunchnumber_ClusLayer_map[crossing] = vector<int>();
                 bunchnumber_ClusLadderZId_map[crossing] = vector<unsigned char>();
                 bunchnumber_ClusLadderPhiId_map[crossing] = vector<unsigned char>();
@@ -205,6 +268,9 @@ int HR_tree_converter(){
                 bunchnumber_ClusX_map[crossing].push_back(cluster_globalX -> at(j));
                 bunchnumber_ClusY_map[crossing].push_back(cluster_globalY -> at(j));
                 bunchnumber_ClusZ_map[crossing].push_back(cluster_globalZ -> at(j));
+                bunchnumber_ClusLocalX_map[crossing].push_back(cluster_LocalX -> at(j));
+                bunchnumber_ClusLocalY_map[crossing].push_back(cluster_LocalY -> at(j));
+                bunchnumber_ClusFPHXBCO_map[crossing].push_back(cluster_FPHXBCO -> at(j));
                 bunchnumber_ClusLayer_map[crossing].push_back(cluster_layer -> at(j));
                 bunchnumber_ClusLadderZId_map[crossing].push_back(cluster_ladderZId -> at(j));
                 bunchnumber_ClusLadderPhiId_map[crossing].push_back(cluster_ladderPhiId -> at(j));
@@ -215,6 +281,9 @@ int HR_tree_converter(){
                 bunchnumber_ClusX_map[crossing].push_back(cluster_globalX -> at(j));
                 bunchnumber_ClusY_map[crossing].push_back(cluster_globalY -> at(j));
                 bunchnumber_ClusZ_map[crossing].push_back(cluster_globalZ -> at(j));
+                bunchnumber_ClusLocalX_map[crossing].push_back(cluster_LocalX -> at(j));
+                bunchnumber_ClusLocalY_map[crossing].push_back(cluster_LocalY -> at(j));
+                bunchnumber_ClusFPHXBCO_map[crossing].push_back(cluster_FPHXBCO -> at(j));
                 bunchnumber_ClusLayer_map[crossing].push_back(cluster_layer -> at(j));
                 bunchnumber_ClusLadderZId_map[crossing].push_back(cluster_ladderZId -> at(j));
                 bunchnumber_ClusLadderPhiId_map[crossing].push_back(cluster_ladderPhiId -> at(j));
@@ -231,17 +300,38 @@ int HR_tree_converter(){
 
             if (vertex_count != 1){continue;}
 
-            BunchNumber = crossing; // note : here we store the crossing number in the BunchNumber variable for later use
+            Crossing_out = crossing; // note : here we store the crossing number in the BunchNumber variable for later use
 
             NClus =           bunchnumber_ClusX_map[crossing].size();
             ClusX =           bunchnumber_ClusX_map[crossing];
             ClusY =           bunchnumber_ClusY_map[crossing];
             ClusZ =           bunchnumber_ClusZ_map[crossing];
+            ClusLocalX =      bunchnumber_ClusLocalX_map[crossing];
+            ClusLocalY =      bunchnumber_ClusLocalY_map[crossing];
             ClusLayer =       bunchnumber_ClusLayer_map[crossing];
             ClusLadderZId =   bunchnumber_ClusLadderZId_map[crossing];
             ClusLadderPhiId = bunchnumber_ClusLadderPhiId_map[crossing];
             ClusAdc =         bunchnumber_ClusAdc_map[crossing];
             ClusPhiSize =     bunchnumber_ClusPhiSize_map[crossing];
+
+            std::map<int,int> FPHXBCO_check; FPHXBCO_check.clear();
+            for (int hit = 0; hit < bunchnumber_ClusFPHXBCO_map[crossing].size(); hit++){
+                if (FPHXBCO_check.find(bunchnumber_ClusFPHXBCO_map[crossing][hit]) == FPHXBCO_check.end()){
+                    FPHXBCO_check[bunchnumber_ClusFPHXBCO_map[crossing][hit]] = 1;
+                }
+                else{
+                    FPHXBCO_check[bunchnumber_ClusFPHXBCO_map[crossing][hit]] += 1;
+                }
+            }
+
+            if (FPHXBCO_check.size() != 1){
+                std::cout<<"check this, FPHXBCO_check size for crossing: "<<Crossing_out<<" is "<<FPHXBCO_check.size()<<std::endl;
+                for (auto &map_pair : FPHXBCO_check){
+                    std::cout<<map_pair.first<<", "<<map_pair.second<<std::endl;
+                }
+            }
+
+            FPHXBCO_out =     (FPHXBCO_check.size() == 0) ? -1000 : bunchnumber_ClusFPHXBCO_map[crossing][0];
 
             INTTvtxZ =        bunchnumber_tracker_vtxZ[crossing].at(0);
 
@@ -255,6 +345,8 @@ int HR_tree_converter(){
     tree_out -> Write();
     h1D_nVTXperCrossing -> Write();
     file_out -> Close();
+
+    system(Form("mv %s/%s %s/completed", output_directory.c_str(), output_filename.c_str(), output_directory.c_str()));
 
     return 888;
 }

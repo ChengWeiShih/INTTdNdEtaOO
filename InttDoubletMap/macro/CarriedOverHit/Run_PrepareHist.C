@@ -1,6 +1,6 @@
-#include "../InttDoubletMap.h"
+#include "../../InttDoubletMap.h"
 
-R__LOAD_LIBRARY(../libInttDoubletMap.so)
+R__LOAD_LIBRARY(../../libInttDoubletMap.so)
 
 TH2D * GetGoodColMap (std::string ColMulMask_map_dir_in, std::string ColMulMask_map_file_in, std::string map_name_in)
 {
@@ -9,26 +9,33 @@ TH2D * GetGoodColMap (std::string ColMulMask_map_dir_in, std::string ColMulMask_
   return h;
 }
 
-void Run_PrepareHist(
+int Run_PrepareHist(
   int process_id = 0,
-  int run_num = 82405,
+  int run_num = 82420,
   int nevents = -1,
-  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82405",
-  string input_filename = "82405_converter.root",
-  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82405/InttDoublets",
+  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/completed",
+  string input_filename = "Ntuple_convertTrigMbdZ_00082420_standalone_ana538_Acts_00000.root",
+  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/InttDoublets",
   
+  int BunchNumber_range_id = 0,
+
   // todo : modify here
   std::string output_file_name_suffix = "",
-  std::pair<double, double> vertexXYIncm = {-0.03677,0.1454},
+  std::pair<double, double> vertexXYIncm = {-0.03662,0.1482},
 
-  int data_type_in = 2, // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+  int data_type_in = 1, // note : pure_trigger 0 //// streaming_trigger 1 //// streaming_data 2
+  bool isUsedMBDz_in = true,
 
   bool BcoFullDiffCut_in = false,
-  int CentralityBin_in = 100, 
+  int CentralityBin_in = -1, 
+  bool is_min_bias_in = false,
+  bool isTriggerSel_in = true,
+  // std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in
+  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = {true, {101,150}},
 
   std::pair<bool, TH1D*> vtxZReweight_in = {false, nullptr},
   bool INTT_vtxZ_QA_in = false,
-  std::pair<double, double> VtxZRange_in = {-10, 10},
+  std::pair<double, double> VtxZRange_in = {-25, 25},
 
   bool ColMulMask_in = false,
   std::pair<bool, std::pair<double, double>> isClusQA_in = {true, {0, 128}},
@@ -48,10 +55,25 @@ void Run_PrepareHist(
   // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc35PhiSize350_00054280.root"
 )
 {
-  
+  std::map<int, std::pair<int,int>> BunchNumber_range_map = {
+    {0,  {0  , 9}},
+    {1,  {10, 19}},
+    {2,  {20, 29}},
+    {3,  {30, 39}},
+    {4,  {40, 49}},
+    {5,  {50, 59}},
+    {6,  {60, 69}},
+    {7,  {70, 79}},
+    {8,  {80, 89}},
+    {9,  {90, 99}},
+    {10, {100, 111}}
+  };
+
+  std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = {true, BunchNumber_range_map[BunchNumber_range_id]};
+
   // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   // note : baseline
-  std::string final_output_directory = output_directory + "/baseline";
+  std::string final_output_directory = output_directory + Form("/BunchNumber_range_%d",BunchNumber_range_id);
   system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
 
   std::pair<bool, std::pair<double, double>> isClusQA = {true, {0,128}}; // note : {adc, phi size}
@@ -71,9 +93,14 @@ void Run_PrepareHist(
     vertexXYIncm,
 
     data_type_in,
+    isUsedMBDz_in,
 
     BcoFullDiffCut_in,
     CentralityBin_in,
+    is_min_bias_in,
+    isTriggerSel_in,
+    isMBDChargeCut_in,
+    isBunchNumber_cut_in,
 
     vtxZReweight_in,
     INTT_vtxZ_QA_in,
@@ -239,5 +266,5 @@ void Run_PrepareHist(
 
   // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name3.c_str(), final_output_directory.c_str()));
 
-  return;
+  return 888;
 }

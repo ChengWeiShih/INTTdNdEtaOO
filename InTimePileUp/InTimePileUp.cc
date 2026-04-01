@@ -127,7 +127,8 @@ int InTimePileUp::process_event(PHCompositeNode *topNode)
 {
   // std::cout << "InTimePileUp::process_event(PHCompositeNode *topNode) Processing Event" << std::endl;
 
-  gl1packet = findNode::getClass<Gl1Packetv3>(topNode, "14001"/*"GL1RAWHIT"*/ /*"GL1Packet"*/); // note : for the selfgen DST, it may be the "GL1RAWHIT"
+  // gl1packet = findNode::getClass<Gl1Packetv3>(topNode, "14001"/*"GL1RAWHIT"*/ /*"GL1Packet"*/); // note : for the selfgen DST, it may be the "GL1RAWHIT"
+  gl1packet = findNode::getClass<Gl1Packetv2>(topNode, "GL1RAWHIT" /*"GL1Packet"*/); // note : for the selfgen DST, it may be the "GL1RAWHIT"
 
   if (!gl1packet)
   {
