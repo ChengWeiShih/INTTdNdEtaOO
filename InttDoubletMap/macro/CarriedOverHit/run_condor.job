@@ -3,21 +3,21 @@ Initialdir         = /sphenix/user/ChengWei/INTT/INTTdNdEtaOO/InttDoubletMap/mac
 Executable         = run_job.sh
 PeriodicHold       = (NumJobStarts>=1 && JobStatus == 1)
 concurrency_limits = CONCURRENCY_LIMIT_DEFAULT:100
-request_memory     = 4GB
+request_memory     = 16GB
 Priority           = 20
 job_lease_duration = 86400
 
 runnumber          = 82420
 nEvents            = -1
-input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/completed
+input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/HR_conversion/completed
 job_offset    = 0
 process_shift      = $(Process) + $(job_offset) 
 input_filename     = Ntuple_convertTrigMbdZ_00082420_standalone_ana538_Acts_$INT(process_shift,%05d).root
-output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/InttDoublets
+output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/InttDoublets_2BCO_NoTrig
 macro_name         = Run_PrepareHist
 
 Output             = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).out
 Error              = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).err
 Log                = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).log
 Arguments          = "$INT(process_shift) $(runnumber) $(nEvents) $(output_directory) $(input_directory) $(input_filename) $(macro_name)"
-Queue 1000
+Queue 1660

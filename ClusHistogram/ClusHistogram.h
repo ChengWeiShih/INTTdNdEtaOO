@@ -258,9 +258,9 @@ class ClusHistogram{
         int nCentralityFineBin = 101;
         
         // note : for eta (tracklet)
-        double EtaEdge_min = -2.7;
-        double EtaEdge_max = 2.7;
-        int nEtaBin = 27;
+        double EtaEdge_min = -2.5;  // -2.7;
+        double EtaEdge_max = 2.5; // 2.7;
+        int nEtaBin = 5; // 27;
 
         // note : for z
         // double VtxZEdge_min = -45; // note : cm

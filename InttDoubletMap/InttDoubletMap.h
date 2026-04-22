@@ -59,6 +59,7 @@ class InttDoubletMap : public ClusHistogram{
         TH1D * h1D_nEvent;
         TH1D * h1D_BunchNumber;
         TH1D * h1D_MBDChargeSum;
+        TH1D * h1D_ClusEtaInttZ;
 
         bool isTrigger = false;
         bool isStreaming = false;

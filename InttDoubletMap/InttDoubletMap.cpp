@@ -234,6 +234,7 @@ void InttDoubletMap::PrepareHistograms()
     h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count;Entries",1,0.5,1.5);
     h1D_BunchNumber = new TH1D("h1D_BunchNumber","h1D_BunchNumber;Selected BunchNumber;Entries",150,-20,130);
     h1D_MBDChargeSum = new TH1D("h1D_MBDChargeSum","h1D_MBDChargeSum;Selected MBD Charged Sum;Entries",250, 0, 500);
+    h1D_ClusEtaInttZ = new TH1D("h1D_ClusEtaInttZ","h1D_ClusEtaInttZ;INTT ClusEta;Counts", nEtaBin, EtaEdge_min, EtaEdge_max);
 
 
     h1D_map.insert( std::make_pair(
@@ -575,7 +576,7 @@ void InttDoubletMap::MainProcess()
 
         test_count[0] += 1;
 
-        if (i % 10 == 0) {std::cout << "Processing event " << i<<", NClus : "<< ClusX -> size()<<", crossing: " << BunchNumber << std::endl;}
+        if (i % 10 == 0) {std::cout << "Processing event " << i<<", NClus : "<< ClusX -> size()<<", BunchNumber: " << BunchNumber << std::endl;}
 
         if (RandInttZ){
             // INTTvtxZ = rand3 -> Uniform(VtxZEdge_min,VtxZEdge_max);
@@ -717,10 +718,12 @@ void InttDoubletMap::MainProcess()
 
         for (ClusHistogram::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
             h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
+            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz);
         }
 
         for (ClusHistogram::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
             h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
+            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz);
         } 
         
         test_count[24] += 1;
@@ -752,6 +755,7 @@ void InttDoubletMap::EndRun()
     h1D_nEvent -> Write();
     h1D_BunchNumber -> Write();
     h1D_MBDChargeSum -> Write();
+    h1D_ClusEtaInttZ -> Write();
 
     for (auto &pair : h2D_map){
 

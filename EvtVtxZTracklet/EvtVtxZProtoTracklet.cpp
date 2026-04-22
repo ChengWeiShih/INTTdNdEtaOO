@@ -263,7 +263,7 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
         tree_in -> SetBranchAddress("NTruthVtx", &NTruthVtx);
     }
 
-    tree_in -> SetBranchAddress("GL1Packet_BCO", &GL1Packet_BCO);
+    if (RunInttBcoFullDiff && runnumber != -1) {tree_in -> SetBranchAddress("GL1Packet_BCO", &GL1Packet_BCO);}
 
     // tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
     // tree_in -> SetBranchAddress("MBD_centrality", &MBD_centrality);
@@ -274,7 +274,9 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
     tree_out = tree_in->CloneTree(0);
 
     // note : add new branches
-    if (RunInttBcoFullDiff && runnumber != -1) {b_InttBcoFullDiff_next = tree_out -> Branch("InttBcoFullDiff_next", &out_InttBcoFullDiff_next);}
+    if (RunInttBcoFullDiff && runnumber != -1) {
+        b_InttBcoFullDiff_next = tree_out -> Branch("InttBcoFullDiff_next", &out_InttBcoFullDiff_next);
+    }
 
     if (RunVtxZReco){
         b_INTTvtxZ = tree_out -> Branch("INTTvtxZ", &out_INTTvtxZ);

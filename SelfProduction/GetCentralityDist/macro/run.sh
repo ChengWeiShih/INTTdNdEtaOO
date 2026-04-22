@@ -3,7 +3,7 @@
 # export LOGNAME=${USER}
 # export HOME=/sphenix/u/${LOGNAME}
 
-source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.538
+source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.546
 export MYINSTALL=/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GetCentralityDist/build/install
 export LD_LIBRARY_PATH=$MYINSTALL/lib:$LD_LIBRARY_PATH
 export ROOT_INCLUDE_PATH=$MYINSTALL/include:$ROOT_INCLUDE_PATH

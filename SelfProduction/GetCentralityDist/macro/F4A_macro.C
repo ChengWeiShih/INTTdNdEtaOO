@@ -66,7 +66,7 @@ R__LOAD_LIBRARY(libtrack_reco.so)
 R__LOAD_LIBRARY(libGetCentralityDist.so)
 
 int F4A_macro(
-    int nevents = -1,
+    int nevents = 10000,
     string  job_index = "00004",
     int run_num = 82400
 ){

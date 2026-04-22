@@ -9,6 +9,66 @@ TH2D * GetGoodColMap (std::string ColMulMask_map_dir_in, std::string ColMulMask_
   return h;
 }
 
+std::map<int, std::pair<int,int>> BunchNumber_range_map = {
+    {0,  {0,   1}},
+    {1,  {2,   3}},
+    {2,  {4,   5}},
+    {3,  {6,   7}},
+    {4,  {8,   9}},
+    {5,  {10, 11}},
+    {6,  {12, 13}},
+    {7,  {14, 15}},
+    {8,  {16, 17}},
+    {9,  {18, 19}},
+    {10, {20, 21}},
+    {11, {22, 23}},
+    {12, {24, 25}},
+    {13, {26, 27}},
+    {14, {28, 29}},
+    {15, {30, 31}},
+    {16, {32, 33}},
+    {17, {34, 35}},
+    {18, {36, 37}},
+    {19, {38, 39}},
+    {20, {40, 41}},
+    {21, {42, 43}},
+    {22, {44, 45}},
+    {23, {46, 47}},
+    {24, {48, 49}},
+    {25, {50, 51}},
+    {26, {52, 53}},
+    {27, {54, 55}},
+    {28, {56, 57}},
+    {29, {58, 59}},
+    {30, {60, 61}},
+    {31, {62, 63}},
+    {32, {64, 65}},
+    {33, {66, 67}},
+    {34, {68, 69}},
+    {35, {70, 71}},
+    {36, {72, 73}},
+    {37, {74, 75}},
+    {38, {76, 77}},
+    {39, {78, 79}},
+    {40, {80, 81}},
+    {41, {82, 83}},
+    {42, {84, 85}},
+    {43, {86, 87}},
+    {44, {88, 89}},
+    {45, {90, 91}},
+    {46, {92, 93}},
+    {47, {94, 95}},
+    {48, {96, 97}},
+    {49, {98, 99}},
+    {50, {100, 101}},
+    {51, {102, 103}},
+    {52, {104, 105}},
+    {53, {106, 107}},
+    {54, {108, 109}},
+    {55, {110, 111}}
+};
+
+
 int Run_PrepareHist(
   int process_id = 0,
   int run_num = 82420,
@@ -18,6 +78,7 @@ int Run_PrepareHist(
   string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/CarryOverHit/82420/InttDoublets",
   
   int BunchNumber_range_id = 0,
+  int MBDChargeSum_range_id = 0,
 
   // todo : modify here
   std::string output_file_name_suffix = "",
@@ -29,9 +90,9 @@ int Run_PrepareHist(
   bool BcoFullDiffCut_in = false,
   int CentralityBin_in = -1, 
   bool is_min_bias_in = false,
-  bool isTriggerSel_in = true,
+  bool isTriggerSel_in = false,
   // std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in
-  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = {true, {101,150}},
+  // std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = {true, {101,150}},
 
   std::pair<bool, TH1D*> vtxZReweight_in = {false, nullptr},
   bool INTT_vtxZ_QA_in = false,
@@ -55,19 +116,55 @@ int Run_PrepareHist(
   // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc35PhiSize350_00054280.root"
 )
 {
-  std::map<int, std::pair<int,int>> BunchNumber_range_map = {
-    {0,  {0  , 9}},
-    {1,  {10, 19}},
-    {2,  {20, 29}},
-    {3,  {30, 39}},
-    {4,  {40, 49}},
-    {5,  {50, 59}},
-    {6,  {60, 69}},
-    {7,  {70, 79}},
-    {8,  {80, 89}},
-    {9,  {90, 99}},
-    {10, {100, 111}}
+  // std::map<int, std::pair<int,int>> BunchNumber_range_map = {
+  //   {0,  {0  , 9}},
+  //   {1,  {10, 19}},
+  //   {2,  {20, 29}},
+  //   {3,  {30, 39}},
+  //   {4,  {40, 49}},
+  //   {5,  {50, 59}},
+  //   {6,  {60, 69}},
+  //   {7,  {70, 79}},
+  //   {8,  {80, 89}},
+  //   {9,  {90, 99}},
+  //   {10, {100, 110}}
+  // };
+
+  // std::map<int, std::pair<int,int>> BunchNumber_range_map = {
+  //     {0,  {0,   4}},
+  //     {1,  {5,   9}},
+  //     {2,  {10, 14}},
+  //     {3,  {15, 19}},
+  //     {4,  {20, 24}},
+  //     {5,  {25, 29}},
+  //     {6,  {30, 34}},
+  //     {7,  {35, 39}},
+  //     {8,  {40, 44}},
+  //     {9,  {45, 49}},
+  //     {10, {50, 54}},
+  //     {11, {55, 59}},
+  //     {12, {60, 64}},
+  //     {13, {65, 69}},
+  //     {14, {70, 74}},
+  //     {15, {75, 79}},
+  //     {16, {80, 84}},
+  //     {17, {85, 89}},
+  //     {18, {90, 94}},
+  //     {19, {95, 99}},
+  //     {20, {100, 104}},
+  //     {21, {105, 110}}
+  // };
+
+  std::map<int, std::pair<bool, std::pair<int,int>>> isMBDChargeCut_map = {
+    {0, {false, {101, 150}}},
+    {1, {true,  {10,   49}}},
+    {2, {true,  {50,  99}}},
+    {3, {true,  {100, 149}}},
+    {4, {true,  {150, 300}}}
   };
+
+  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = isMBDChargeCut_map[MBDChargeSum_range_id];
+
 
   std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = {true, BunchNumber_range_map[BunchNumber_range_id]};
 
