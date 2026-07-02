@@ -38,7 +38,7 @@ void Run_EvtVtxZTracklet(
   std::pair<double, double> vertexXYIncm_MC = {-0.053125, 0.13593800}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
   // std::pair<double, double> vertexXYIncm_MC = {-0.021907, 0.223293}; // note : in cm // note : MC EPOS
 
-  std::pair<double, double> vertexXYIncm_data = {-0.0537813, 0.137281}; // note : in cm // note : data {test_82391_INTTsurveyOnly/AvgVtxXY}
+  std::pair<double, double> vertexXYIncm_data = {-0.04844, 0.11719}; // note : in cm // note : data {test_82391_LoacalPos_PrivateCentrality/AvgVtxXY}
 
   std::pair<double, double> vertexXYIncm = (run_num == -1) ? vertexXYIncm_MC : vertexXYIncm_data;
 

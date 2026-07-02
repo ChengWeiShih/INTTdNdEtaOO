@@ -9,14 +9,14 @@ job_lease_duration = 86400
 
 runnumber          = 82391
 nEvents            = -1
-input_directory    = /sphenix/lustre01/sphnxpro/production/run3oo/physics/ana534_nocdbtag_v001
+input_directory    = /sphenix/lustre01/sphnxpro/production/run3oo/physics/ana537_nocdbtag_v001
 job_offset    = 0
 process_shift      = $(Process) + $(job_offset) 
 input_filename     = I_am_cool
-output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_newCentrality2
+output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_LoacalPos_PrivateCentrality
 
 Output             = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).out
 Error              = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).err
 Log                = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).log
 Arguments          = "$INT(process_shift) $(runnumber) $(nEvents) $(output_directory) $(input_directory) $(input_filename)"
-Queue 200
+Queue 1000

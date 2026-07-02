@@ -90,15 +90,24 @@ R__LOAD_LIBRARY(libdNdEtaINTT.so)
 
 int INTTRawHit_check_BarrelNIM_SurveyOnly_CentralityTest(
     int process_id = 0,
-    int run_num = 82400,
-    int nevents = -1,
-    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex",
-  
+    int run_num = 37,
+    int nevents = 100,
+    string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex",
+
     // note : for macro
     string input_directory = "/sphenix/lustre01/sphnxpro/mdc2/shijing_hepmc/OO_0_15fm/nopileup",
     string input_filename = "I_am_cool",
 
-    string output_file_name_suffix_in = "ana538_CdbTagProdA_2024"
+    string output_file_name_suffix_in = "ana551_MDC2",
+
+    std::pair<bool, std::string> PrivateCentrality = {true, "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GlauberTest/MC_HIJING_run00037_20260318/GlauberNBDfit_centrality_bounds_1pct.txt"},
+
+    std::tuple<bool, std::string, std::string, int> PrivateCentralityFit = {
+        true,
+        "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GlauberTest/Npart_output.root",
+        "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GlauberTest/MC_HIJING_run00037_20260318/GlauberNBDfit_output.root",
+        400 // note : integral range max
+    }
 ){
     TStopwatch* watch = new TStopwatch();
     watch->Start();
@@ -142,7 +151,7 @@ int INTTRawHit_check_BarrelNIM_SurveyOnly_CentralityTest(
     auto rc = recoConsts::instance();
     rc->set_IntFlag("RUNNUMBER", run_num);
     Enable::CDB = true;
-    rc->set_StringFlag("CDB_GLOBALTAG", "ProdA_2024");
+    rc->set_StringFlag("CDB_GLOBALTAG", "MDC2");
     //  rc->set_StringFlag("CDB_GLOBALTAG", "newcdbtag");
     rc->set_uint64Flag("TIMESTAMP", run_num);
 
@@ -213,23 +222,25 @@ int INTTRawHit_check_BarrelNIM_SurveyOnly_CentralityTest(
     // se->registerSubsystem(cr);
 
 
-    MinimumBiasClassifier *mb = new MinimumBiasClassifier();
-    mb->Verbosity(111111);
-    mb->setSpecies(MinimumBiasInfo::SPECIES::OO);
-    mb->setIsSim(true);
-    mb->setOverwriteScale("/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/PrivateCentralityScaleFile/cdb_centrality_scale_82391_150.root");
-    se->registerSubsystem(mb);
+    // MinimumBiasClassifier *mb = new MinimumBiasClassifier();
+    // // mb->Verbosity(111111);
+    // mb->setSpecies(MinimumBiasInfo::SPECIES::OO);
+    // mb->setIsSim(true);
+    // // mb->setOverwriteScale("/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/PrivateCentralityScaleFile/cdb_centrality_scale_82391_150.root");
+    // se->registerSubsystem(mb);
 
-    CentralityReco *cr = new CentralityReco();
-    cr->Verbosity(111111);
-    cr->setOverwriteScale("/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/PrivateCentralityScaleFile/cdb_centrality_scale_82391_150.root");
-    se->registerSubsystem(cr);
+    // CentralityReco *cr = new CentralityReco();
+    // // cr->Verbosity(111111);
+    // // cr->setOverwriteScale("/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/PrivateCentralityScaleFile/cdb_centrality_scale_82391_150.root");
+    // se->registerSubsystem(cr);
 
     // Division: -----Ntuplizer-------------------------------------------------------------------
     dNdEtaINTT * mydNdEtaINTT = new dNdEtaINTT(
         Form("dNdEtaINTT"),
         output_directory + "/" + output_ntuple_name,
-        0 // note : isData
+        0, // note : isData
+        PrivateCentrality,
+        PrivateCentralityFit
     );
 
     mydNdEtaINTT -> GetHEPMC(0);

@@ -11,7 +11,7 @@
 # source /opt/sphenix/core/bin/setup_local.sh $MYINSTALL $MYINSTALL2
 
 
-source /opt/sphenix/core/bin/sphenix_setup.sh -n new
+source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.551
 export MYINSTALL=/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/CheckInttRawHit/build/install
 export MYINSTALL2=/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/dNdEta_Run2023/dNdEtaINTT/build/install
 export LD_LIBRARY_PATH=$MYINSTALL/lib:$MYINSTALL2/lib:$LD_LIBRARY_PATH
@@ -59,10 +59,10 @@ echo output_directory: ${output_directory}
 echo input_directory: ${input_directory}
 echo input_filename: ${input_filename}
 
-root.exe -q -b INTTRawHit_check_BarrelNIM.C\(${process},${runnumber},${nEvents},\"${output_directory}\",\"${input_directory}\",\"${input_filename}\"\)
+root.exe -q -b INTTRawHit_check_BarrelNIM_CentralityTest.C\(${process},${runnumber},${nEvents},\"${output_directory}\",\"${input_directory}\",\"${input_filename}\"\)
 
 # mv ${out_file_directory}/${out_file_name} ${out_file_directory}/completed
 #todo : check the output filename
 # mv ${output_directory}/BcoDiffNtuple_${runnumber}_clonehitremoveBCO_hotchannelremove_hitQA_checkclonehit_${formatted_process_id}.root ${output_directory}/completed
 
-echo all done process the INTTRawHit_check_BarrelNIM.C, process_id ${process_id}
+echo all done process the INTTRawHit_check_BarrelNIM_CentralityTest.C, process_id ${process_id}

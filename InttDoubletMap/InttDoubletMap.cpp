@@ -116,6 +116,27 @@ isTriggerSel(isTriggerSel_in)
     PrepareOutPutRootFile();
     PrepareHistograms();
 
+    if (isStreaming && isUsedMBDz){
+        std::cout<<"isStreaming: "<<isStreaming<<", isUsedMBDz: "<<isUsedMBDz<<", so return"<<std::endl;
+        exit(1);
+    }
+
+    if (isStreaming && isTriggerSel){
+        std::cout<<"isStreaming: "<<isStreaming<<", isTriggerSel: "<<isTriggerSel<<", so return"<<std::endl;
+        exit(1);
+    }
+
+    if (isStreaming && isMinBiasCut){
+        std::cout<<"isStreaming: "<<isStreaming<<", isMinBiasCut: "<<isMinBiasCut<<", so return"<<std::endl;
+        exit(1);
+    }
+
+    if (isStreaming && CentralityBin != -1){
+        std::cout<<"isStreaming: "<<isStreaming<<", CentralityBin: "<<CentralityBin<<", so return"<<std::endl;
+        exit(1);
+    }
+
+
 }
 
 void InttDoubletMap::PrepareOutPutFileName()
@@ -174,6 +195,8 @@ void InttDoubletMap::PrepareOutPutRootFile(){
 
 void InttDoubletMap::PrepareHistograms()
 {   
+    h1D_GoodColMap_ZId = new TH1D("h1D_GoodColMap_ZId","h1D_GoodColMap_ZId;ClusZID [cm];Entries",nZbin, Zmin, Zmax);
+
     // Division : ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     for (int eta_bin = 0; eta_bin < 11; eta_bin++)
@@ -534,22 +557,27 @@ void InttDoubletMap::FillPairs(std::vector<pair_str> input_TrackletPair_vec, boo
 
 void InttDoubletMap::MainProcess()
 {
+
     if (SetRandomHits.first){PrepareUniqueClusXYZ();}
     
+
     if (ColMulMask && h2D_GoodColMap == nullptr){
         std::cout<<"The GoodColMap is not set correctly"<<std::endl;
         exit(1);
     }
+
 
     if (HaveGeoOffsetTag && CheckGeoOffsetMap() <= 0){
         std::cout<<"The geo offset map is not set correctly"<<std::endl;
         exit(1);
     }
 
+
     if (HaveGeoOffsetTag == false && CheckGeoOffsetMap() > 0.0001) {
         std::cout<<"The HaveGeoOffsetTag is false, but the GeoOffsetMap has some non-zero numbers, please check the GeoOffsetMap"<<std::endl;
         exit(1);
     }
+
 
     if (
         ColMulMask &&
@@ -565,6 +593,7 @@ void InttDoubletMap::MainProcess()
         std::cout<<"h2D_GoodColMap : "<<h2D_GoodColMap -> GetNbinsY()<<" "<<h2D_GoodColMap -> GetYaxis() -> GetXmin()<<" "<<h2D_GoodColMap -> GetYaxis() -> GetXmax()<<std::endl;
         exit(1);
     }
+
 
     std::vector<int> test_count(40,0);
 

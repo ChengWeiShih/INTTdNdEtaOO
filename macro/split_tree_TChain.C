@@ -28,17 +28,18 @@ std::vector<std::string> readFileToVector(const std::string& filePath) {
 
 
 
-void split_tree_TChain(std::string generator_name, int FileList_index = 1, int File_shift_index = 0) {
+void split_tree_TChain(std::string generator_name = "HIJING", int FileList_index = 0, int File_shift_index = 0) {
 
     std::map<std::string,std::string> sample_directory ={
-        {"HIJING", "Sim_HIJING_MDC2_ana472_20250307"}, // note : new 
+        {"HIJING", "20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex"}, // note : new 
+        
         {"AMPT", "Sim_AMPT_MDC2_ana472_20250310"}, // note : new
         {"EPOS", "Sim_EPOS_MDC2_ana472_20250310"}, // note : new 
         {"HStrange", "Sim_HIJING_strangeness_MDC2_ana472_20250310"} // note : new 
     };
 
-    string input_directory = Form("/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/%s", sample_directory[generator_name].c_str());
-    string output_directory = Form("/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/%s/per5k", sample_directory[generator_name].c_str()); // note : auto
+    string input_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/%s/completed",sample_directory[generator_name].c_str());
+    string output_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/%s/per5k",sample_directory[generator_name].c_str()); // note : auto
     
     std::cout << "Input directory: " << input_directory << std::endl;
     std::cout << "Output directory: " << output_directory << std::endl;

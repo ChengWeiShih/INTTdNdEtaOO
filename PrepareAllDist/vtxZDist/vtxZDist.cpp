@@ -85,8 +85,8 @@ void vtxZDist::PrepareInputFile()
 
     tree_in -> SetBranchStatus("*", 0);
 
-    tree_in -> SetBranchStatus("is_min_bias", 1);
-    tree_in -> SetBranchStatus("MBD_centrality", 1);
+    tree_in -> SetBranchStatus("is_min_bias_private_MinDeposit", 1); // todo: tentative
+    tree_in -> SetBranchStatus("MBD_centrality_private", 1); // todo: tentative
     tree_in -> SetBranchStatus("MBD_z_vtx", 1);
     tree_in -> SetBranchStatus("MBD_charge_sum", 1);
 
@@ -101,12 +101,12 @@ void vtxZDist::PrepareInputFile()
     tree_in -> SetBranchStatus("NClus_Layer1", 1);
     
     // note : for data
-    if (branch_map.find("MBDNSg2") != branch_map.end()) {
-        tree_in -> SetBranchStatus("MBDNSg2", 1);
+    if (branch_map.find("MBDNSg1") != branch_map.end()) {
+        tree_in -> SetBranchStatus("MBDNSg1", 1);
         m_withTrig = true;
     }
-    if (branch_map.find("MBDNSg2_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchStatus("MBDNSg2_vtxZ10cm", 1);}
-    if (branch_map.find("MBDNSg2_vtxZ30cm") != branch_map.end()) {tree_in -> SetBranchStatus("MBDNSg2_vtxZ30cm", 1);}
+    if (branch_map.find("MBDNSg1_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchStatus("MBDNSg1_vtxZ10cm", 1);}
+    if (branch_map.find("MBDNSg1_vtxZ13cm") != branch_map.end()) {tree_in -> SetBranchStatus("MBDNSg1_vtxZ13cm", 1);}
     
     if (branch_map.find("InttBcoFullDiff_next") != branch_map.end()) {tree_in -> SetBranchStatus("InttBcoFullDiff_next", 1); }
     
@@ -115,8 +115,8 @@ void vtxZDist::PrepareInputFile()
     if (branch_map.find("TruthPV_trig_z") != branch_map.end()) {tree_in -> SetBranchStatus("TruthPV_trig_z", 1);}
 
     // Division : ---SetBranchAddress-----------------------------------------------------------------------------------------------
-    tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
-    tree_in -> SetBranchAddress("MBD_centrality", &MBD_centrality);
+    tree_in -> SetBranchAddress("is_min_bias_private_MinDeposit", &is_min_bias); // todo: tentative
+    tree_in -> SetBranchAddress("MBD_centrality_private", &MBD_centrality); // todo: tentative
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
     tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum);
 
@@ -131,9 +131,9 @@ void vtxZDist::PrepareInputFile()
     tree_in -> SetBranchAddress("NClus_Layer1", &NClus_Layer1);
 
     // note : for data
-    if (branch_map.find("MBDNSg2") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2", &MBDNSg2);}
-    if (branch_map.find("MBDNSg2_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2_vtxZ10cm", &MBDNSg2_vtxZ10cm);}
-    if (branch_map.find("MBDNSg2_vtxZ30cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2_vtxZ30cm", &MBDNSg2_vtxZ30cm);}
+    if (branch_map.find("MBDNSg1") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1", &MBDNSg1);}
+    if (branch_map.find("MBDNSg1_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1_vtxZ10cm", &MBDNSg1_vtxZ10cm);}
+    if (branch_map.find("MBDNSg1_vtxZ13cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1_vtxZ13cm", &MBDNSg1_vtxZ13cm);}
 
     if (branch_map.find("InttBcoFullDiff_next") != branch_map.end()) {tree_in -> SetBranchAddress("InttBcoFullDiff_next", &InttBcoFullDiff_next); }
 
@@ -480,7 +480,7 @@ void vtxZDist::PrepareEvent()
 
         // note : for data
         if (runnumber != -1 && ApplyEvtBcoFullDiffCut.first && InttBcoFullDiff_next <= ApplyEvtBcoFullDiffCut.second) {continue;}
-        // if (runnumber != -1 && MBDNSg2 != 1) {continue;} // todo: assume MC no trigger
+        // if (runnumber != -1 && MBDNSg1 != 1) {continue;} // todo: assume MC no trigger
 
         // note : for MC
         // if (runnumber == -1 && NTruthVtx != 1) {continue;}

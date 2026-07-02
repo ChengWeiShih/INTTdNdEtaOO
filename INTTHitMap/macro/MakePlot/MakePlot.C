@@ -1,6 +1,6 @@
 int MakePlot()
 {
-    bool is_dark = true;
+    bool is_dark = false;
     bool fixed_range = true;
     std::pair<double,double> Zrange = std::make_pair(0, 10000);
     string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82391_HitMap_cdbFELIXbyFELIXHotMap/completed";

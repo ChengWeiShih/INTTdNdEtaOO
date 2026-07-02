@@ -155,8 +155,8 @@ void ClusHistogram::PrepareInputRootFile()
     PrimaryG4P_isChargeHadron = 0;
 
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
-    tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
-    tree_in -> SetBranchAddress("MBD_centrality", &MBD_centrality);
+    tree_in -> SetBranchAddress("is_min_bias_private_MinDeposit", &is_min_bias);
+    tree_in -> SetBranchAddress("MBD_centrality_private", &MBD_centrality);
     tree_in -> SetBranchAddress("MBD_south_charge_sum", &MBD_south_charge_sum);
     tree_in -> SetBranchAddress("MBD_north_charge_sum", &MBD_north_charge_sum);
     tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum);
@@ -169,10 +169,10 @@ void ClusHistogram::PrepareInputRootFile()
 
     // note : trigger tag
     if (runnumber != -1){ // note : for data
-        if(branch_map.find("MBDNSg2") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2", &MBDNSg2);}
-        if(branch_map.find("MBDNSg2_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2_vtxZ10cm", &MBDNSg2_vtxZ10cm);}
-        if(branch_map.find("MBDNSg2_vtxZ30cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2_vtxZ30cm", &MBDNSg2_vtxZ30cm);}
-        if(branch_map.find("MBDNSg2_vtxZ60cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg2_vtxZ60cm", &MBDNSg2_vtxZ60cm);}
+        if(branch_map.find("MBDNSg1") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1", &MBDNSg1);}
+        if(branch_map.find("MBDNSg1_vtxZ10cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1_vtxZ10cm", &MBDNSg1_vtxZ10cm);}
+        if(branch_map.find("MBDNSg1_vtxZ13cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1_vtxZ13cm", &MBDNSg1_vtxZ13cm);}
+        if(branch_map.find("MBDNSg1_vtxZ150cm") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1_vtxZ150cm", &MBDNSg1_vtxZ150cm);}
         if(branch_map.find("BunchNumber") != branch_map.end()) {tree_in -> SetBranchAddress("BunchNumber", &BunchNumber);}
     }
 
@@ -723,7 +723,7 @@ void ClusHistogram::MainProcess()
 
         // note : for data
         if (runnumber != -1 && BcoFullDiffCut && InttBcoFullDiff_next <= cut_InttBcoFullDIff_next) {continue;}
-        if (runnumber != -1 && MBDNSg2 != 1) {continue;} // todo: assume MC no trigger
+        if (runnumber != -1 && MBDNSg1 != 1) {continue;} // todo: assume MC no trigger
 
         // note : for MC
         // if (runnumber == -1 && NTruthVtx != 1) {continue;}

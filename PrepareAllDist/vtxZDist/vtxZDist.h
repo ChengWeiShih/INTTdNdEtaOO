@@ -91,9 +91,9 @@ class vtxZDist{
 
 
         // note : for data?
-        int MBDNSg2;
-        int MBDNSg2_vtxZ10cm;
-        int MBDNSg2_vtxZ30cm;
+        int MBDNSg1;
+        int MBDNSg1_vtxZ10cm;
+        int MBDNSg1_vtxZ13cm;
 
         int InttBcoFullDiff_next; // note : for data
 

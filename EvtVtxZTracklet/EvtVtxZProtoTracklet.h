@@ -157,6 +157,7 @@ class EvtVtxZProtoTracklet{
     double out_TrapezoidalFitWidth;
     double out_TrapezoidalFWHM;
     double out_FitHeight;
+    double out_GoodPairCount;
 
     TBranch * b_INTTvtxZ;
     TBranch * b_INTTvtxZError;
@@ -165,6 +166,7 @@ class EvtVtxZProtoTracklet{
     TBranch * b_TrapezoidalFitWidth;
     TBranch * b_TrapezoidalFWHM;
     TBranch * b_FitHeight;
+    TBranch * b_GoodPairCount;
 
     // note : ---------------------- For the cluster eta and phi ----------------------
     std::vector<double> out_ClusEta_INTTz;
@@ -198,22 +200,23 @@ class EvtVtxZProtoTracklet{
     double temp_INTTvtxZ;
     double temp_INTTvtxZError;
 
-    int out_MBDNSg2;
-    int out_MBDNSg2_vtxZ10cm;
-    int out_MBDNSg2_vtxZ30cm;
-    int out_MBDNSg2_vtxZ60cm;
+    int out_MBDNSg1;
+    int out_MBDNSg1_vtxZ10cm;
+    int out_MBDNSg1_vtxZ13cm;
+    int out_MBDNSg1_vtxZ150cm;
     int out_eID_count;
 
-    TBranch * b_MBDNSg2;
-    TBranch * b_MBDNSg2_vtxZ10cm;
-    TBranch * b_MBDNSg2_vtxZ30cm;
-    TBranch * b_MBDNSg2_vtxZ60cm;
+    TBranch * b_MBDNSg1;
+    TBranch * b_MBDNSg1_vtxZ10cm;
+    TBranch * b_MBDNSg1_vtxZ13cm;
+    TBranch * b_MBDNSg1_vtxZ150cm;
     TBranch * b_eID_count;
 
-    int index_MBDNSg2 = 10;
-    int index_MBDNSg2_vtxZ10cm = 12;
-    int index_MBDNSg2_vtxZ30cm = 13;
-    int index_MBDNSg2_vtxZ60cm = 14;
+    // note : for pp and OO data taking
+    int index_MBDNSg1 = 10; 
+    int index_MBDNSg1_vtxZ10cm = 12;
+    int index_MBDNSg1_vtxZ13cm = 13;
+    int index_MBDNSg1_vtxZ150cm = 14;
 
     void GetTriggerInfo();
 

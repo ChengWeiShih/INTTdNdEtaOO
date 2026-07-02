@@ -204,10 +204,10 @@ class ClusHistogram{
         std::vector<int> *firedTriggers;
 
         // note : trigger tag
-        int MBDNSg2 = 1;
-        int MBDNSg2_vtxZ10cm = 1;
-        int MBDNSg2_vtxZ30cm = 1;
-        int MBDNSg2_vtxZ60cm = 1;
+        int MBDNSg1 = 1;
+        int MBDNSg1_vtxZ10cm = 1;
+        int MBDNSg1_vtxZ13cm = 1;
+        int MBDNSg1_vtxZ150cm = 1;
         uint64_t BunchNumber;
 
         int crossing = -1000;
@@ -258,9 +258,9 @@ class ClusHistogram{
         int nCentralityFineBin = 101;
         
         // note : for eta (tracklet)
-        double EtaEdge_min = -2.5;  // -2.7;
-        double EtaEdge_max = 2.5; // 2.7;
-        int nEtaBin = 5; // 27;
+        double EtaEdge_min = -2.7; //-2.5;
+        double EtaEdge_max = 2.7; //2.5;
+        int nEtaBin = 27; //5;
 
         // note : for z
         // double VtxZEdge_min = -45; // note : cm

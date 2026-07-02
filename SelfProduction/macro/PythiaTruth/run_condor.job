@@ -1,5 +1,5 @@
 Universe           = vanilla
-Initialdir         = /sphenix/user/ChengWei/INTT/INTTdNdEtaOO/EvtVtxZTracklet/macro
+Initialdir         = /sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/macro/PythiaTruth
 Executable         = run_job.sh
 PeriodicHold       = (NumJobStarts>=1 && JobStatus == 1)
 concurrency_limits = CONCURRENCY_LIMIT_DEFAULT:100
@@ -7,16 +7,16 @@ request_memory     = 4GB
 Priority           = 20
 job_lease_duration = 86400
 
-runnumber          = -1
+runnumber          = 28
 nEvents            = -1
-input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/completed
+input_directory    = /sphenix/lustre01/sphnxpro/mdc2/js_pp200_signal/g4hits/run0028/detroit
 job_offset    = 0
 process_shift      = $(Process) + $(job_offset) 
-input_filename     = MC_HIJING_Ntuple_00082400_ana538_CdbTagProdA_2024_$INT(process_shift,%06d).root
-output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/EvtVtxZ
+input_filename     = I_am_cool
+output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/PYTHIA_MC/run0028_detroit
 
 Output             = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).out
 Error              = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).err
 Log                = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).log
 Arguments          = "$INT(process_shift) $(runnumber) $(nEvents) $(output_directory) $(input_directory) $(input_filename)"
-Queue 4000
+Queue 2000

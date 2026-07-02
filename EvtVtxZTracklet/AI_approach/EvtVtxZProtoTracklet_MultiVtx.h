@@ -235,6 +235,7 @@ class EvtVtxZProtoTracklet_MultiVtx {
     // note : ---------------------- For vertex Z calculation ----------------------
     void PrepareINTTvtxZ();
     void GetINTTvtxZ();
+    TH1D* BkgEstimation(); // note : rotate inner clusters by pi, build bkg line_breakdown_hist
 
     double get_radius(double x, double y);
     double get_delta_phi(double angle_1, double angle_2);

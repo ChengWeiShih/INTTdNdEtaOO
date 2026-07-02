@@ -428,15 +428,22 @@ void EvtVtxZProtoTracklet_MultiVtx::GetINTTvtxZ()
         //  (out_TrapezoidalFitWidth > 2.4 && out_TrapezoidalFitWidth < 2.55) ||
         //  (out_TrapezoidalFitWidth > 1.65 && out_TrapezoidalFitWidth < 1.8)))
     {
+        // note : get the background estimation histogram
+        TH1D* bkg_hist = BkgEstimation();
+
         line_breakdown_hist_zoomin = (TH1D*)line_breakdown_hist -> Clone("line_breakdown_hist_zoomin");
         line_breakdown_hist_zoomin -> GetXaxis() -> SetRangeUser(gaus_fit_vec.front()->GetParameter(1)-temp_fit_region_half, gaus_fit_vec.front()->GetParameter(1)+temp_fit_region_half);
         line_breakdown_hist_zoomin -> SetMinimum(gaus_fit_vec.front()->GetParameter(0)*0.5);
         line_breakdown_hist_zoomin -> SetMaximum(gaus_fit_vec.front()->GetParameter(0)*1.5);
 
+        // TH1D* bkg_hist_zoomin = (TH1D*)bkg_hist -> Clone("bkg_hist_zoomin");
+        // bkg_hist_zoomin -> GetXaxis() -> SetRangeUser(gaus_fit_vec.front()->GetParameter(1)-temp_fit_region_half, gaus_fit_vec.front()->GetParameter(1)+temp_fit_region_half);
+
         c1->cd(); pad_EvtZDist->Draw(); pad_EvtZDist->cd();
         line_breakdown_hist->SetMinimum(0);
         line_breakdown_hist->SetMaximum(lbd_max_content*1.65);
         line_breakdown_hist->Draw("hist");
+        bkg_hist->Draw("hist same");
         for (int fit_i = 0; fit_i < (int)gaus_fit_vec.size(); fit_i++) gaus_fit_vec[gaus_fit_vec.size()-fit_i-1]->Draw("l same");
         draw_text->DrawLatex(0.2,0.9,Form("Event ID: %i", out_eID_count));
         draw_text->DrawLatex(0.2,0.86,Form("NClusGood: %i",(int)(evt_sPH_inner_nocolumn_vec_PostCut.size()+evt_sPH_outer_nocolumn_vec_PostCut.size())));
@@ -448,10 +455,14 @@ void EvtVtxZProtoTracklet_MultiVtx::GetINTTvtxZ()
 
         c1->cd(); pad_ZoomIn_EvtZDist->Draw(); pad_ZoomIn_EvtZDist->cd();
         line_breakdown_hist_zoomin->Draw("hist");
+        // bkg_hist_zoomin->Draw("hist same");
         for (int fit_i = 0; fit_i < (int)gaus_fit_vec.size(); fit_i++) gaus_fit_vec[gaus_fit_vec.size()-fit_i-1]->Draw("l same");
         INTTvtxZ_EvtDisplay_file_out->cd();
         c1->Write(Form("eID_%d_VtxN_0_EvtZDist_ZoomIn", out_eID_count));
         pad_ZoomIn_EvtZDist->Clear(); pad_EvtZDist->Clear();
+
+        delete bkg_hist;
+        // delete bkg_hist_zoomin;
     }
 
     if (PrintRecoDetails && out_eID_count % 1 == 0){
@@ -459,6 +470,105 @@ void EvtVtxZProtoTracklet_MultiVtx::GetINTTvtxZ()
                  <<" NgroupTrapezoidal: "<<out_NgroupTrapezoidal<<" TrapezoidalFitWidth: "<<out_TrapezoidalFitWidth
                  <<" MBD_z: "<<MBD_z_vtx<<std::endl;
     }
+}
+
+// ============================================================================
+// BkgEstimation
+// Rotate the inner clusters by pi (x -> -x, y -> -y) and pair them with the
+// unmodified outer clusters using the same ΔΦ + DCA cuts.
+// Returns a NEW TH1D* with the same binning as line_breakdown_hist.
+// The caller is responsible for deleting it.
+// ============================================================================
+TH1D* EvtVtxZProtoTracklet_MultiVtx::BkgEstimation()
+{
+    TH1D* bkg_lbd = new TH1D(
+        Form("bkg_lbd_eID_%d", out_eID_count), "",
+        line_breakdown_hist->GetNbinsX(),
+        line_breakdown_hist->GetXaxis()->GetXmin(),
+        line_breakdown_hist->GetXaxis()->GetXmax());
+    bkg_lbd->SetLineColor(kRed);
+    // bkg_lbd->SetLineStyle(2); // note : dashed
+    bkg_lbd->SetLineWidth(2);
+
+    // note : build rotated inner phi-map  (rotate by pi: x -> -x, y -> -y)
+    // std::vector<std::vector<std::pair<bool,clu_info>>> rotated_inner_phi(360); 
+
+    std::vector<std::vector<std::pair<bool,EvtVtxZProtoTracklet_MultiVtx::clu_info>>> rotated_inner_phi;
+    rotated_inner_phi.clear();
+    rotated_inner_phi = std::vector<std::vector<std::pair<bool,EvtVtxZProtoTracklet_MultiVtx::clu_info>>>(360);
+
+    for (const auto& clu : evt_sPH_inner_nocolumn_vec_PostCut){
+        clu_info rot_clu = clu;
+        // note : rotate the cluster position by pi around the beam axis
+        // rot_clu.x = 2.0 * vertexXYIncm.first  - clu.x;  // reflect through beam-spot
+        // rot_clu.y = 2.0 * vertexXYIncm.second - clu.y;
+
+        rot_clu.x = - clu.x;  // reflect through beam-spot
+        rot_clu.y = - clu.y;
+
+        double phi = (rot_clu.y - vertexXYIncm.second < 0)
+            ? atan2(rot_clu.y - vertexXYIncm.second, rot_clu.x - vertexXYIncm.first) * (180./TMath::Pi()) + 360
+            : atan2(rot_clu.y - vertexXYIncm.second, rot_clu.x - vertexXYIncm.first) * (180./TMath::Pi());
+        rotated_inner_phi[ int(phi) ].push_back({false, rot_clu});
+    }
+
+    // note : reuse the already-filled outer_clu_phi_map_PostCut (unchanged)
+
+    for (int inner_phi_i = 0; inner_phi_i < 360; inner_phi_i++){
+        for (int inner_phi_clu_i = 0; inner_phi_clu_i < (int)rotated_inner_phi[inner_phi_i].size(); inner_phi_clu_i++){
+            if (rotated_inner_phi[inner_phi_i][inner_phi_clu_i].first) continue;
+            const clu_info& ic = rotated_inner_phi[inner_phi_i][inner_phi_clu_i].second;
+
+            double Clus_InnerPhi = (ic.y - vertexXYIncm.second < 0)
+                ? atan2(ic.y - vertexXYIncm.second, ic.x - vertexXYIncm.first) * (180./TMath::Pi()) + 360
+                : atan2(ic.y - vertexXYIncm.second, ic.x - vertexXYIncm.first) * (180./TMath::Pi());
+
+            for (int scan_i = -5; scan_i < 6; scan_i++){
+                int true_scan_i = ((inner_phi_i + scan_i) < 0) ? 360 + (inner_phi_i + scan_i)
+                                : ((inner_phi_i + scan_i) > 359) ? (inner_phi_i + scan_i) - 360
+                                : inner_phi_i + scan_i;
+
+                for (int outer_phi_clu_i = 0; outer_phi_clu_i < (int)outer_clu_phi_map_PostCut[true_scan_i].size(); outer_phi_clu_i++){
+                    if (outer_clu_phi_map_PostCut[true_scan_i][outer_phi_clu_i].first) continue;
+                    const clu_info& oc = outer_clu_phi_map_PostCut[true_scan_i][outer_phi_clu_i].second;
+
+                    double Clus_OuterPhi = (oc.y - vertexXYIncm.second < 0)
+                        ? atan2(oc.y - vertexXYIncm.second, oc.x - vertexXYIncm.first) * (180./TMath::Pi()) + 360
+                        : atan2(oc.y - vertexXYIncm.second, oc.x - vertexXYIncm.first) * (180./TMath::Pi());
+                    double delta_phi = get_delta_phi(Clus_InnerPhi, Clus_OuterPhi);
+
+                    if (delta_phi <= DeltaPhiCutInDegree.first.first || delta_phi >= DeltaPhiCutInDegree.first.second) continue;
+
+                    if (IsDCACutApplied){
+                        double DCA_sign = calculateAngleBetweenVectors(
+                            oc.x, oc.y, ic.x, ic.y,
+                            vertexXYIncm.first, vertexXYIncm.second);
+                        if (DCA_sign <= DCAcutIncm.first.first || DCA_sign >= DCAcutIncm.first.second) continue;
+                    }
+
+                    std::pair<double,double> z_range_info = Get_possible_zvtx(
+                        0.,
+                        { get_radius(ic.x - vertexXYIncm.first, ic.y - vertexXYIncm.second), ic.z, double(ic.sensorZID) },
+                        { get_radius(oc.x - vertexXYIncm.first, oc.y - vertexXYIncm.second), oc.z, double(oc.sensorZID) });
+
+                    if (evt_possible_z_range.first < z_range_info.first && z_range_info.first < evt_possible_z_range.second) {
+                        trapezoidal_line_breakdown(bkg_lbd,
+                            get_radius(ic.x - vertexXYIncm.first, ic.y - vertexXYIncm.second), ic.z, ic.sensorZID,
+                            get_radius(oc.x - vertexXYIncm.first, oc.y - vertexXYIncm.second), oc.z, oc.sensorZID);
+                    }
+                }
+            }
+        }
+    }
+
+    // note : apply the same edge rejection
+    for (int bin_i = 0; bin_i < bkg_lbd->GetNbinsX(); bin_i++){
+        if (bkg_lbd->GetBinCenter(bin_i+1) < edge_rejection.first || bkg_lbd->GetBinCenter(bin_i+1) > edge_rejection.second){
+            bkg_lbd->SetBinContent(bin_i+1, 0);
+        }
+    }
+
+    return bkg_lbd;
 }
 
 std::pair<double,double> EvtVtxZProtoTracklet_MultiVtx::rotatePoint(double x, double y)

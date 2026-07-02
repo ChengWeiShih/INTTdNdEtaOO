@@ -16,25 +16,35 @@ int Run_GetMultiplicityMap()
     string sub_folder_name = "baseline";
     std::pair<bool, std::pair<double, double>> isClusQA = {true, {30,40}}; // note : {adc, phi size}
     std::pair<bool, std::pair<double, double>> isClusQA_MC = {true, {15,40}}; // note : {adc, phi size}
+    double SetMbinFloat = 55; // note : 0-100
+    std::pair<double, double> VtxZRange = {-30, 30}; // note : cm
 
-    int runnumber = 82391;
-    std::string data_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos/ColumnCheck/%s/completed", sub_folder_name.c_str());
-    std::string data_file_name = Form("Data_ColumnCheck_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00082391_merged.root", isClusQA.second.first, isClusQA.second.second);
+    std::string MC_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/%s/completed", sub_folder_name.c_str());
+    std::string MC_file_name = Form("MC_ColumnCheck_Mbin%.0f_VtxZ%.0fto%.0fcm_ClusQAAdc%.0fPhiSize%.0f_merged.root", SetMbinFloat, VtxZRange.first, VtxZRange.second, isClusQA_MC.second.first, isClusQA_MC.second.second);
 
     // std::string MC_directory = Form("/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/Sim_HIJING_MDC2_ana472_20250307/Run7/EvtVtxZ/ColumnCheck/%s/completed", sub_folder_name.c_str());
     // std::string MC_file_name = Form("MC_ColumnCheck_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_merged.root", isClusQA.second.first, isClusQA.second.second);
     // std::string output_directory = MC_directory + "/MulMap"; // note : AUTO
 
-    std::string MC_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/%s/completed", sub_folder_name.c_str());
-    std::string MC_file_name = Form("MC_ColumnCheck_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_merged.root", isClusQA_MC.second.first, isClusQA_MC.second.second);
-    std::string output_directory = MC_directory + "/MulMap"; // note : AUTO
+    // note : surveyed only
+    // int runnumber = 82391;
+    // std::string data_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality/ColumnCheck/%s/completed", sub_folder_name.c_str());
+    // std::string data_file_name = Form("Data_ColumnCheck_BcoFullDiffCut_Mbin%.0f_VtxZ%.0fto%.0fcm_ClusQAAdc%.0fPhiSize%.0f_00082391_merged.root", SetMbinFloat, VtxZRange.first, VtxZRange.second, isClusQA.second.first, isClusQA.second.second);
+    // std::string output_directory = MC_directory + "/MulMap"; // note : AUTO
+
+
+    // note : with alignment parameter file
+    int runnumber = 82391;
+    std::string data_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_LoacalPos_PrivateCentrality/ColumnCheck/%s/completed", sub_folder_name.c_str());
+    std::string data_file_name = Form("Data_ColumnCheck_BcoFullDiffCut_Mbin%.0f_VtxZ%.0fto%.0fcm_ClusQAAdc%.0fPhiSize%.0f_00082391_merged.root", SetMbinFloat, VtxZRange.first, VtxZRange.second, isClusQA.second.first, isClusQA.second.second);
+    std::string output_directory = MC_directory + "/MulMap_WithAlignP"; // note : AUTO
+
 
     std::string output_file_name_suffix = "";
 
     system(Form("if [ ! -d %s ]; then mkdir -p %s/completed; fi;", output_directory.c_str(), output_directory.c_str()));
 
-    double SetMbinFloat = 70; // note : 0-100
-    std::pair<double, double> VtxZRange = {-30, 30}; // note : cm
+    
     bool IsZClustering = false;
     bool BcoFullDiffCut = true;
     

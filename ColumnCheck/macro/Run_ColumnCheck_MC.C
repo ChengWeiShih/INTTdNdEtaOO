@@ -12,7 +12,7 @@ void Run_ColumnCheck_MC(
   
   // todo : modify here
   std::string output_file_name_suffix = "",
-  double SetMbinFloat = 70, // note : 0 - 100
+  double SetMbinFloat = 55, // note : 0 - 100
             
   std::pair<double, double> VtxZRange = {-30, 30}, // note: MBD vtx Z
   bool IsZClustering = false,
@@ -25,7 +25,7 @@ void Run_ColumnCheck_MC(
 
   // std::pair<double, double> vertexXYIncm_MC = {-0.0218978, 0.223183}; // note : HIJING
   // std::pair<double, double> vertexXYIncm_MC = {-0.0216964, 0.223331}; // note : HIJING + strangeness increase
-  std::pair<double, double> vertexXYIncm_MC = {-0.053125, 0.135938}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
+  std::pair<double, double> vertexXYIncm_MC = {-0.05469, 0.13906}; // note : in cm // note : MC HIJING, {MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest}
   // std::pair<double, double> vertexXYIncm_MC = {-0.021907, 0.223293}; // note : EPOS
 
   std::pair<double, double> vertexXYIncm = (run_num == -1) ? vertexXYIncm_MC : vertexXYIncm_data;

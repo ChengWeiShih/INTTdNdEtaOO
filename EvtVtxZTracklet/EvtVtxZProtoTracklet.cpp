@@ -286,6 +286,7 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
         b_TrapezoidalFitWidth = tree_out -> Branch("TrapezoidalFitWidth", &out_TrapezoidalFitWidth);
         b_TrapezoidalFWHM = tree_out -> Branch("TrapezoidalFWHM", &out_TrapezoidalFWHM);
         b_FitHeight = tree_out -> Branch("FitHeight", &out_FitHeight);
+        b_GoodPairCount = tree_out -> Branch("GoodPair", &out_GoodPairCount);
 
         b_ClusEta_INTTz = tree_out -> Branch("ClusEta_INTTz", &out_ClusEta_INTTz);
         b_ClusEta_MBDz = tree_out -> Branch("ClusEta_MBDz", &out_ClusEta_MBDz);
@@ -297,10 +298,10 @@ void EvtVtxZProtoTracklet::PrepareRootFile()
         }
 
         if (m_withTrig){
-            b_MBDNSg2 = tree_out -> Branch("MBDNSg2", &out_MBDNSg2);
-            b_MBDNSg2_vtxZ10cm = tree_out -> Branch("MBDNSg2_vtxZ10cm", &out_MBDNSg2_vtxZ10cm);
-            b_MBDNSg2_vtxZ30cm = tree_out -> Branch("MBDNSg2_vtxZ30cm", &out_MBDNSg2_vtxZ30cm);
-            b_MBDNSg2_vtxZ60cm = tree_out -> Branch("MBDNSg2_vtxZ60cm", &out_MBDNSg2_vtxZ60cm);
+            b_MBDNSg1 = tree_out -> Branch("MBDNSg1", &out_MBDNSg1);
+            b_MBDNSg1_vtxZ10cm = tree_out -> Branch("MBDNSg1_vtxZ10cm", &out_MBDNSg1_vtxZ10cm);
+            b_MBDNSg1_vtxZ13cm = tree_out -> Branch("MBDNSg1_vtxZ13cm", &out_MBDNSg1_vtxZ13cm);
+            b_MBDNSg1_vtxZ150cm = tree_out -> Branch("MBDNSg1_vtxZ150cm", &out_MBDNSg1_vtxZ150cm);
         }
 
         b_eID_count = tree_out -> Branch("eID_count", &out_eID_count);
@@ -320,10 +321,10 @@ void EvtVtxZProtoTracklet::GetTriggerInfo()
         firedTriggers_map[trig] = 1;
     }
 
-    out_MBDNSg2 = (firedTriggers_map.find(index_MBDNSg2) != firedTriggers_map.end()) ? 1 : 0;
-    out_MBDNSg2_vtxZ10cm = (firedTriggers_map.find(index_MBDNSg2_vtxZ10cm) != firedTriggers_map.end()) ? 1 : 0;
-    out_MBDNSg2_vtxZ30cm = (firedTriggers_map.find(index_MBDNSg2_vtxZ30cm) != firedTriggers_map.end()) ? 1 : 0;
-    out_MBDNSg2_vtxZ60cm = (firedTriggers_map.find(index_MBDNSg2_vtxZ60cm) != firedTriggers_map.end()) ? 1 : 0;
+    out_MBDNSg1 = (firedTriggers_map.find(index_MBDNSg1) != firedTriggers_map.end()) ? 1 : 0;
+    out_MBDNSg1_vtxZ10cm = (firedTriggers_map.find(index_MBDNSg1_vtxZ10cm) != firedTriggers_map.end()) ? 1 : 0;
+    out_MBDNSg1_vtxZ13cm = (firedTriggers_map.find(index_MBDNSg1_vtxZ13cm) != firedTriggers_map.end()) ? 1 : 0;
+    out_MBDNSg1_vtxZ150cm = (firedTriggers_map.find(index_MBDNSg1_vtxZ150cm) != firedTriggers_map.end()) ? 1 : 0;
 }
 
 void EvtVtxZProtoTracklet::PrepareINTTvtxZ()
@@ -400,6 +401,7 @@ void EvtVtxZProtoTracklet::PrepareClusterVec()
 void EvtVtxZProtoTracklet::GetINTTvtxZ()
 {
 
+    out_GoodPairCount = 0;
     inner_clu_phi_map_PostCut.clear();
     outer_clu_phi_map_PostCut.clear();
     inner_clu_phi_map_PostCut = std::vector<std::vector<std::pair<bool,EvtVtxZProtoTracklet::clu_info>>>(360);
@@ -499,7 +501,9 @@ void EvtVtxZProtoTracklet::GetINTTvtxZ()
                   // note : ----------------------------------------------------------------------------------------------------------------------------------
                   // note : check the coverage
                   if (evt_possible_z_range.first < z_range_info.first && z_range_info.first < evt_possible_z_range.second) {
-                      evt_possible_z -> Fill(z_range_info.first);
+                      
+                        out_GoodPairCount += 1;
+                        evt_possible_z -> Fill(z_range_info.first);
 
                       // note : fill the line_breakdown histogram as well as a vector for the width determination
                       trapezoidal_line_breakdown( 
@@ -605,7 +609,8 @@ void EvtVtxZProtoTracklet::GetINTTvtxZ()
             (out_INTTvtxZ - MBD_z_vtx) > 3.0 || 
             (out_TrapezoidalFitWidth < 0.9 && out_TrapezoidalFWHM < 6) ||
             (out_TrapezoidalFitWidth > 2.4 && out_TrapezoidalFitWidth < 2.55) ||
-            (out_TrapezoidalFitWidth > 1.65 && out_TrapezoidalFitWidth < 1.8)
+            (out_TrapezoidalFitWidth > 1.65 && out_TrapezoidalFitWidth < 1.8) ||
+            (out_FitHeight < 0.002 * double( int(evt_sPH_inner_nocolumn_vec_PostCut.size()) + int(evt_sPH_outer_nocolumn_vec_PostCut.size()) - 300 )) // y=0.002\cdot\left(x-300\right)
         )
     )
   {
@@ -632,7 +637,7 @@ void EvtVtxZProtoTracklet::GetINTTvtxZ()
     }
 
     draw_text -> DrawLatex(0.2, 0.9, Form("Event ID: %i", out_eID_count));
-    draw_text -> DrawLatex(0.2, 0.86, Form("NClusGood: %i", evt_sPH_inner_nocolumn_vec_PostCut.size() + evt_sPH_outer_nocolumn_vec_PostCut.size()));
+    draw_text -> DrawLatex(0.2, 0.86, Form("NClusGood: %i, Good pair: %d", evt_sPH_inner_nocolumn_vec_PostCut.size() + evt_sPH_outer_nocolumn_vec_PostCut.size(), out_GoodPairCount));
     draw_text -> DrawLatex(0.2, 0.82, Form("Reco. vtx Z: %.3f cm, StdDev: %.3f cm", out_INTTvtxZ, out_INTTvtxZError));
     draw_text -> DrawLatex(0.2, 0.78, Form("MBD_z_vtx: %.3f cm", MBD_z_vtx));
     if (runnumber == -1) {
@@ -663,6 +668,10 @@ void EvtVtxZProtoTracklet::GetINTTvtxZ()
   // note : print everything 
   if (PrintRecoDetails && out_eID_count % 1 == 0){
     std::cout<<"eID: "<<out_eID_count<<" NClusGood: "<<evt_sPH_inner_nocolumn_vec_PostCut.size() + evt_sPH_outer_nocolumn_vec_PostCut.size()<<", NClusAll: "<<evt_sPH_inner_nocolumn_vec.size() + evt_sPH_outer_nocolumn_vec.size()<<", INTTvtxZ : "<<out_INTTvtxZ<<" INTTvtxZError : "<<out_INTTvtxZError<<" NgroupTrapezoidal : "<<out_NgroupTrapezoidal<<" NgroupCoarse : "<<out_NgroupCoarse<<" TrapezoidalFitWidth : "<<out_TrapezoidalFitWidth<<" TrapezoidalFWHM : "<<out_TrapezoidalFWHM<<", MBD_z: "<<MBD_z_vtx<<", diff: "<<out_INTTvtxZ - MBD_z_vtx<<std::endl;
+  }
+
+  if (out_FitHeight < 0.002 * double( int(evt_sPH_inner_nocolumn_vec_PostCut.size()) + int(evt_sPH_outer_nocolumn_vec_PostCut.size()) - 300 )){
+    std::cout<<"eID: "<<out_eID_count<<", potential multiple collisions: "<<out_FitHeight<<", NClus post: "<<evt_sPH_inner_nocolumn_vec_PostCut.size() + evt_sPH_outer_nocolumn_vec_PostCut.size()<<", slope y: "<<0.002 * double( int(evt_sPH_inner_nocolumn_vec_PostCut.size()) + int(evt_sPH_outer_nocolumn_vec_PostCut.size()) - 300 )<<std::endl;
   }
 
   return;
@@ -883,7 +892,7 @@ void EvtVtxZProtoTracklet::FillRecoINTTVtxZH1D(int event_index)
 
     // note : for data
     if (runnumber != -1 && out_InttBcoFullDiff_next <= cut_InttBcoFullDIff_next) {return;}
-    if (runnumber != -1 && out_MBDNSg2 != 1) {return;} // todo: assume MC no trigger
+    if (runnumber != -1 && out_MBDNSg1_vtxZ10cm != 1) {return;} // todo: assume MC no trigger
 
     // note : for MC
     // if (runnumber == -1 && NTruthVtx != 1) {return;}
@@ -1011,6 +1020,7 @@ void EvtVtxZProtoTracklet::MainProcess()
 
 void EvtVtxZProtoTracklet::EvtCleanUp()
 {
+    
     evt_sPH_inner_nocolumn_vec_PostCut.clear();
     evt_sPH_outer_nocolumn_vec_PostCut.clear();
     inner_clu_phi_map_PostCut.clear();
@@ -1028,6 +1038,7 @@ void EvtVtxZProtoTracklet::EvtCleanUp()
     out_TrapezoidalFitWidth = std::nan("");
     out_TrapezoidalFWHM = std::nan("");
     out_FitHeight = std::nan("");
+    out_GoodPairCount = 0;
 
     temp_INTTvtxZ = std::nan("");
     temp_INTTvtxZError = std::nan("");

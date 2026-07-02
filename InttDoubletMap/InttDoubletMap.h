@@ -1,11 +1,11 @@
 #ifndef INTTDOUBLETMAP_H
 #define INTTDOUBLETMAP_H
 
-#include "../ClusHistogram/ClusHistogram.h"
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/ClusHistogram/ClusHistogram.h"
 
-#include "../EvtVtxZTracklet/structure.h"
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/EvtVtxZTracklet/structure.h"
 
-#include "../Constants.h"
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/Constants.h"
 
 class InttDoubletMap : public ClusHistogram{
     public:

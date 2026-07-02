@@ -71,12 +71,15 @@
 #include <mbd/MbdPmtHit.h>
 
 #include <ffarawobjects/Gl1Packet.h>
+#include <ffarawobjects/Gl1Packetv3.h>
 
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <string>
+#include <sstream>
+#include <vector>
 
 #include <TDatabasePDG.h>
 #include <TFile.h>
@@ -85,6 +88,8 @@
 #include <TParticlePDG.h>
 #include <TTree.h>
 #include <TVector3.h>
+#include <TF1.h>
+#include <TH1D.h>
 
 class PHCompositeNode;
 class SvtxTrack;
@@ -102,13 +107,22 @@ class MbdOut;
 class MbdPmtContainer;
 class MbdVertex;
 class MbdVertexMap;
+class Gl1Packet;
 
 class dNdEtaINTT : public SubsysReco
 {
   public:
     dNdEtaINTT(const std::string &name = "dNdEtaINTTAnalyzer",    //
                const std::string &outputfile = "INTTdNdEta.root", //
-               const bool &isData = false);
+               const bool &isData = false,
+               const std::pair<bool, std::string> &PrivateCentrality_in = {true, "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GetCentralityDist/macro/test_macro/centrality_bounds_1pct_data.txt"},
+               const std::tuple<bool, std::string, std::string, int> &PrivateCentralityFit_in = {
+                true,
+                "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GlauberTest/Npart_output.root",
+                "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/GlauberTest/run82391/GlauberNBDfit_output.root",
+                400 // note : integral range max
+              }
+    );
 
     ~dNdEtaINTT() override;
 
@@ -166,6 +180,65 @@ class dNdEtaINTT : public SubsysReco
     void GetTriggerFire(bool b) { _get_trigger_fire = b; }
 
   private:
+    struct CentralityBin_str
+    {
+        int percent_low;
+        int percent_high;
+        float x_cut_low;
+        float x_cut_high;
+    };
+    std::vector<CentralityBin_str> centrality_bins_private;
+
+    bool ReadCentralityTable_private();
+    float GetCentralityBin_private(float MBD_charge_sum_in);
+    float MBD_centrality_private;
+    float MBD_centrality_privateFit;
+    bool is_min_bias_private;
+    bool is_min_bias_private2;
+
+    TFile * file_in_glauber = nullptr;
+    TFile * file_in_GlauNBDFit = nullptr;
+    TTree * tree_GlauNBDFit = nullptr;
+    static TH1D *g_h1D_OO_Npart;
+    TF1 *f_NBDGlauber = nullptr;
+    static double NBD(double n, double mu, double k){
+      if (mu <= 0.0 || k <= 0.0) return 0.0;
+      double r  = k / (mu + k);          // p in the standard form
+      double lg = TMath::LnGamma(n + k)
+                - TMath::LnGamma(k)
+                - TMath::LnGamma(n + 1.0)
+                + n * TMath::Log(1.0 - r)
+                + k * TMath::Log(r);
+      return (lg < -300.0) ? 0.0 : TMath::Exp(lg);
+    };
+    static double NBDGlauberConv(double *x_arr, double *par){
+      double x    = x_arr[0];
+      double norm = par[0];
+      double mu   = par[1];
+      double k    = par[2];
+
+      if (!g_h1D_OO_Npart) return 0.0;
+      if (mu <= 0.0 || k <= 0.0) return 0.0;
+
+      double val = 0.0;
+      int nbins  = g_h1D_OO_Npart->GetNbinsX();
+
+      for (int ib = 1; ib <= nbins; ++ib)
+      {
+          double Npart    = g_h1D_OO_Npart->GetBinCenter(ib);
+          double wNpart   = g_h1D_OO_Npart->GetBinContent(ib);
+          if (wNpart <= 0.0 || Npart <= 0.0) continue;
+
+          // For the sum of Npart NBD(mu,k) variates -> NBD(Npart*mu, Npart*k)
+          double mu_eff = Npart * mu;
+          double k_eff  = Npart * k;
+
+          val += wNpart * NBD(x, mu_eff, k_eff);
+      }
+
+      return norm * val;
+    };
+
     void ResetVectors();
     void GetHEPMCInfo(PHCompositeNode *topNode);
     void GetRecoClusterInfo(PHCompositeNode *topNode);
@@ -196,6 +269,8 @@ class dNdEtaINTT : public SubsysReco
     unsigned int eventNum = 0;
     std::string _outputFile;
     bool IsData;
+    std::pair<bool, std::string> PrivateCentrality;
+    std::tuple<bool, std::string, std::string, int> PrivateCentralityFit;
     // int InputFileListIndex;
     // int NEvtPerFile;
 

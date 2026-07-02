@@ -287,7 +287,7 @@ int INTTHitMap::process_event(PHCompositeNode *topNode)
       }
       else // note : if we don't want to remove the clone hits
       {
-        evt_inttHits_map[Form("%d",i)] = {server,felix_ch,chip,channel,adc,bco, bco_diff}; // note : only index i to make the key unique
+        evt_inttHits_map[Form("%d_%d",i1,i)] = {server,felix_ch,chip,channel,adc,bco, bco_diff}; // note : only index i to make the key unique
       }
 
     } // note : end of INTT raw hit loop

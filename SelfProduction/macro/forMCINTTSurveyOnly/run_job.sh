@@ -11,7 +11,7 @@
 # export ROOT_INCLUDE_PATH=$MYINSTALL/include:$MYINSTALL2/include:$MYINSTALL3/include:$ROOT_INCLUDE_PATH
 # source /opt/sphenix/core/bin/setup_local.sh $MYINSTALL $MYINSTALL2 $MYINSTALL3
 
-source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.538
+source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.551
 export MYINSTALL=/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/CheckInttRawHit/build/install
 export MYINSTALL2=/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/SelfProduction/dNdEta_Run2023/dNdEtaINTT/build/install
 export LD_LIBRARY_PATH=$MYINSTALL/lib:$MYINSTALL2/lib:$LD_LIBRARY_PATH

@@ -12,7 +12,7 @@ void Run_ColumnCheck(
   
   // todo : modify here
   std::string output_file_name_suffix = "",
-  double SetMbinFloat = 70, // note : 0 - 100
+  double SetMbinFloat = 55, // note : 0 - 100
             
   std::pair<double, double> VtxZRange = {-30, 30}, // note: MBD vtx Z
   bool IsZClustering = false,
@@ -21,7 +21,7 @@ void Run_ColumnCheck(
   bool ColMulMask = false
 )
 {
-  std::pair<double, double> vertexXYIncm_data = {-0.0537813, 0.137281}; // note : in cm // note : data {test_82391_INTTsurveyOnly/AvgVtxXY}
+  std::pair<double, double> vertexXYIncm_data = {-0.05156, 0.13594}; // note : in cm // note : data {test_82391_INTTsurveyOnly/AvgVtxXY}
 
   // std::pair<double, double> vertexXYIncm_MC = {-0.0218978, 0.223183}; // note : HIJING
   // std::pair<double, double> vertexXYIncm_MC = {-0.0216964, 0.223331}; // note : HIJING + strangeness increase

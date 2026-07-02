@@ -10,11 +10,11 @@ job_lease_duration = 86400
 runnumber          = -1
 nFiles             = 100
 nEvents            = -1
-input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/completed
+input_directory    = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/completed
 job_offset    = 0
 process_shift      = $(Process) + $(job_offset) 
-input_filename     = MC_HIJING_Ntuple_00082400_ana538_CdbTagProdA_2024
-output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260318/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/AvgVtxXY
+input_filename     = MC_HIJING_Ntuple_00037_ana551_MDC2
+output_directory   = /sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/AvgVtxXY
 
 Output             = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).out
 Error              = $(output_directory)/cw_log/condor_$INT(process_shift,%05d).err

@@ -85,8 +85,16 @@ template <class T> void CleanVec(std::vector<T> &v)
 }
 } // namespace
 
+TH1D* dNdEtaINTT::g_h1D_OO_Npart = nullptr;
+
 //____________________________________________________________________________..
-dNdEtaINTT::dNdEtaINTT(const std::string &name, const std::string &outputfile, const bool &isData)
+dNdEtaINTT::dNdEtaINTT(
+    const std::string &name, 
+    const std::string &outputfile, 
+    const bool &isData,
+    const std::pair<bool, std::string> &PrivateCentrality_in,
+    const std::tuple<bool, std::string, std::string, int> &PrivateCentralityFit_in
+)
     : SubsysReco(name)
     , _get_hepmc_info(false)
     , _get_truth_cluster(false)
@@ -101,6 +109,8 @@ dNdEtaINTT::dNdEtaINTT(const std::string &name, const std::string &outputfile, c
     , _get_trigger_fire(true)
     , _outputFile(outputfile)
     , IsData(isData)
+    , PrivateCentrality(PrivateCentrality_in)
+    , PrivateCentralityFit(PrivateCentralityFit_in)
     , eventheader(nullptr)
     , m_geneventmap(nullptr)
     , m_genevt(nullptr)
@@ -131,6 +141,50 @@ dNdEtaINTT::~dNdEtaINTT()
 //____________________________________________________________________________..
 int dNdEtaINTT::Init(PHCompositeNode *topNode)
 {
+    if (PrivateCentrality.first){
+        ReadCentralityTable_private();
+    }
+
+    if (std::get<0>(PrivateCentralityFit)){
+        file_in_glauber = TFile::Open(Form("%s",(std::get<1>(PrivateCentralityFit)).c_str()));
+        file_in_GlauNBDFit = TFile::Open(Form("%s",(std::get<2>(PrivateCentralityFit)).c_str()));
+
+        g_h1D_OO_Npart = dynamic_cast<TH1D*>(file_in_glauber->Get("h1D_OO_Npart"));
+        if (!g_h1D_OO_Npart) {
+            std::cerr << "[ERROR] Cannot retrieve h1D_OO_Npart from Glauber file." << std::endl;
+            exit(1);
+        }
+
+        tree_GlauNBDFit = (TTree *) file_in_GlauNBDFit->Get("fitParams");
+        double Norm;
+        double mu;
+        double k;
+    
+        tree_GlauNBDFit -> SetBranchAddress("Norm", &Norm);
+        tree_GlauNBDFit -> SetBranchAddress("mu", &mu);
+        tree_GlauNBDFit -> SetBranchAddress("k", &k);
+
+        tree_GlauNBDFit -> GetEntry(0);
+
+        f_NBDGlauber = new TF1("f_NBDGlauber",
+                                 dNdEtaINTT::NBDGlauberConv,
+                                 0, 400,
+                                 3);   // 3 free parameters
+
+        // Parameter names
+        f_NBDGlauber->SetParName(0, "Norm");
+        f_NBDGlauber->SetParName(1, "#mu (mean charge/NN)");
+        f_NBDGlauber->SetParName(2, "k (NBD shape)");
+
+        f_NBDGlauber->SetParameters(
+            Norm,
+            mu,
+            k
+        );
+
+        std::cout<<"input Glauber-NBD function parameters, Norm: "<<Norm<<", mu: "<<mu<<", k: "<<k<<std::endl;
+    }
+
     std::cout << "dNdEtaINTT::Init(PHCompositeNode *topNode) Initializing" << std::endl << "Running on Data or simulation? -> IsData = " << IsData << std::endl;
 
     PHTFileServer::get().open(_outputFile, "RECREATE");
@@ -151,7 +205,11 @@ int dNdEtaINTT::Init(PHCompositeNode *topNode)
         outtree->Branch("femclk", &femclk);
         outtree->Branch("is_min_bias", &is_min_bias);
         outtree->Branch("is_min_bias_wozdc", &is_min_bias_wozdc);
+        outtree->Branch("is_min_bias_private", &is_min_bias_private);
+        outtree->Branch("is_min_bias_private_MinDeposit", &is_min_bias_private2);
         outtree->Branch("MBD_centrality", &centrality_mbd_);
+        outtree->Branch("MBD_centrality_private", &MBD_centrality_private);
+        outtree->Branch("MBD_centrality_privateFit", &MBD_centrality_privateFit);
         outtree->Branch("MBD_z_vtx", &mbd_z_vtx);
         outtree->Branch("MBD_south_npmt", &mbd_south_npmt);
         outtree->Branch("MBD_north_npmt", &mbd_north_npmt);
@@ -380,18 +438,6 @@ int dNdEtaINTT::process_event(PHCompositeNode *topNode)
         svtx_evalstack->next_event(topNode);
     }
 
-    if (_get_centrality)
-    {
-        eventheader = findNode::getClass<EventHeader>(topNode, "EventHeader");
-        if (!eventheader)
-        {
-            std::cout << "Error, can't find EventHeader" << std::endl;
-            exit(1);
-        }
-
-        GetCentralityInfo(topNode);
-    }
-
     if (_get_intt_data)
     {
         if (!IsData)
@@ -446,6 +492,18 @@ int dNdEtaINTT::process_event(PHCompositeNode *topNode)
                 GetTriggerFireInfo(topNode);
             }
         }
+    }
+
+    if (_get_centrality)
+    {
+        eventheader = findNode::getClass<EventHeader>(topNode, "EventHeader");
+        if (!eventheader)
+        {
+            std::cout << "Error, can't find EventHeader" << std::endl;
+            exit(1);
+        }
+
+        GetCentralityInfo(topNode);
     }
 
     // event_ = InputFileListIndex * NEvtPerFile + eventNum;
@@ -750,6 +808,10 @@ void dNdEtaINTT::GetCentralityInfo(PHCompositeNode *topNode)
     mbd_north_charge_sum = m_mbdout->get_q(1);
     mbd_charge_sum = mbd_south_charge_sum + mbd_north_charge_sum;
     mbd_charge_asymm = mbd_charge_sum == 0 ? std::numeric_limits<float>::quiet_NaN() : (float)(mbd_south_charge_sum - mbd_north_charge_sum) / mbd_charge_sum;
+
+    MBD_centrality_private = GetCentralityBin_private(mbd_charge_sum);
+    MBD_centrality_privateFit = 100. * (f_NBDGlauber->Integral(mbd_charge_sum,std::get<3>(PrivateCentralityFit))/f_NBDGlauber->Integral(0,std::get<3>(PrivateCentralityFit)));
+
     if (m_CentInfo)
     {
         if (m_CentInfo->has_centrality_bin(CentralityInfo::PROP::mbd_NS))
@@ -773,10 +835,29 @@ void dNdEtaINTT::GetCentralityInfo(PHCompositeNode *topNode)
     std::cout << "[INFO] Is minimum bias: " << is_min_bias << "; Centrality: (centrality_mbd, centrality_mbdquantity) = (" << centrality_mbd_ << ", " << centrality_mbdquantity_ << ")" << std::endl;
 
     // minimum bias criteria without zdc cut (note: the zdc cut has a 99-100% efficiency for the Level-1 trigger events and 100% for central Au+Au event)
-    bool mbd_ntube = (mbd_south_npmt >= 2 && mbd_north_npmt >= 2) ? true : false;
-    bool mbd_sn_q_imbalence = (mbd_north_charge_sum > 10 || mbd_south_charge_sum < 150) ? true : false;
+    bool mbd_ntube = (mbd_south_npmt >= 1 && mbd_north_npmt >= 1) ? true : false;
+    bool mbd_sn_q_imbalence = (mbd_north_charge_sum > 10 || mbd_south_charge_sum < 80) ? true : false;
     bool mbd_zvtx = (fabs(mbd_z_vtx) < 60) ? true : false;
-    is_min_bias_wozdc = (IsData) ? (mbd_ntube && mbd_sn_q_imbalence && mbd_zvtx) : (npart_ > 0);
+    bool trigger_selection = (!IsData || (IsData && out_MBDNS1_scaled_vtx10cm == 1) ) ? true : false;
+    bool mbd_minimum_deposition_south = (mbd_south_npmt > 1 || (mbd_south_npmt == 1 && mbd_south_charge_sum > 0.25)) ? true : false;
+    bool mbd_minimum_deposition_north = (mbd_north_npmt > 1 || (mbd_north_npmt == 1 && mbd_north_charge_sum > 0.25)) ? true : false;
+    // is_min_bias_wozdc = (IsData) ? (mbd_ntube && mbd_sn_q_imbalence && mbd_zvtx) : (npart_ > 0);
+
+    is_min_bias_private =  (
+        mbd_ntube && 
+        mbd_sn_q_imbalence && 
+        mbd_zvtx && 
+        trigger_selection
+    ) ? true : false;
+    
+    is_min_bias_private2 = (
+        mbd_ntube && 
+        mbd_sn_q_imbalence && 
+        mbd_zvtx && 
+        trigger_selection && 
+        mbd_minimum_deposition_south && 
+        mbd_minimum_deposition_north
+    ) ? true : false;
 
     int hits_n = 0;
     int hits_s = 0;
@@ -1538,3 +1619,137 @@ std::map<int,int> dNdEtaINTT::prepare_trigger_map(std::vector<int> trigger_vec_i
 
     return output_map;
 }
+
+bool dNdEtaINTT::ReadCentralityTable_private()
+{
+    std::string& input_directory = PrivateCentrality.second;
+
+    centrality_bins_private.clear();
+
+    std::ifstream file(input_directory);
+
+    if (!file.is_open())
+    {
+        std::cerr << "Error: cannot open file: " << input_directory << std::endl;
+        return false;
+    }
+
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        // Skip empty lines
+        if (line.empty()) continue;
+
+        // Skip comment lines
+        if (line[0] == '#') continue;
+
+        std::stringstream ss(line);
+
+        CentralityBin_str bin;
+
+        ss >> bin.percent_low
+           >> bin.percent_high
+           >> bin.x_cut_low
+           >> bin.x_cut_high;
+
+        // Check if the line was successfully read
+        if (ss.fail())
+        {
+            std::cerr << "Warning: failed to parse line: " << line << std::endl;
+            continue;
+        }
+
+        centrality_bins_private.push_back(bin);
+    }
+
+    file.close();
+
+    std::cout << "Loaded " << centrality_bins_private.size()
+              << " centrality bins from " << input_directory << std::endl;
+
+    
+    std::cout << "\nCentrality table content:\n";
+    std::cout << "# percent_low percent_high x_cut_low x_cut_high\n";
+
+    for (const auto& bin : centrality_bins_private)
+    {
+        std::cout << bin.percent_low  << " "
+                  << bin.percent_high << " "
+                  << bin.x_cut_low    << " "
+                  << bin.x_cut_high   << std::endl;
+    }
+
+    return true;
+}
+
+float dNdEtaINTT::GetCentralityBin_private(const float MBD_charge_sum_in)
+{
+    for (const auto& bin : centrality_bins_private)
+    {
+        if (MBD_charge_sum_in >= bin.x_cut_low &&
+            MBD_charge_sum_in <  bin.x_cut_high)
+        {
+            return bin.percent_high;
+        }
+    }
+
+    // Return -1 if the charge sum is outside all defined ranges
+    return -1;
+}
+
+// double dNdEtaINTT::NBD(double n, double mu, double k)
+// {
+//     if (mu <= 0.0 || k <= 0.0) return 0.0;
+//     double r  = k / (mu + k);          // p in the standard form
+//     double lg = TMath::LnGamma(n + k)
+//               - TMath::LnGamma(k)
+//               - TMath::LnGamma(n + 1.0)
+//               + n * TMath::Log(1.0 - r)
+//               + k * TMath::Log(r);
+//     return (lg < -300.0) ? 0.0 : TMath::Exp(lg);
+// }
+
+// ---------------------------------------------------------------
+//  NBD-Glauber convolution evaluated at charge value x
+//
+//  The total MBD charge for a given Npart is the sum of Npart
+//  independent NBD contributions.  For Npart identical NBD(mu,k)
+//  random variables the resulting distribution is NBD(Npart*mu, Npart*k).
+//
+//  Full model:
+//    f(x) = norm * Sum_{Npart} P(Npart) * NBD(x ; Npart*mu , Npart*k)
+//
+//  TF1 parameters:
+//    [0]  norm  – overall normalization
+//    [1]  mu    – mean charge per NN collision
+//    [2]  k     – NBD shape parameter
+// ---------------------------------------------------------------
+// double dNdEtaINTT::NBDGlauberConv(double *x_arr, double *par)
+// {
+//     double x    = x_arr[0];
+//     double norm = par[0];
+//     double mu   = par[1];
+//     double k    = par[2];
+
+//     if (!g_h1D_OO_Npart) return 0.0;
+//     if (mu <= 0.0 || k <= 0.0) return 0.0;
+
+//     double val = 0.0;
+//     int nbins  = g_h1D_OO_Npart->GetNbinsX();
+
+//     for (int ib = 1; ib <= nbins; ++ib)
+//     {
+//         double Npart    = g_h1D_OO_Npart->GetBinCenter(ib);
+//         double wNpart   = g_h1D_OO_Npart->GetBinContent(ib);
+//         if (wNpart <= 0.0 || Npart <= 0.0) continue;
+
+//         // For the sum of Npart NBD(mu,k) variates -> NBD(Npart*mu, Npart*k)
+//         double mu_eff = Npart * mu;
+//         double k_eff  = Npart * k;
+
+//         val += wNpart * NBD(x, mu_eff, k_eff);
+//     }
+
+//     return norm * val;
+// }

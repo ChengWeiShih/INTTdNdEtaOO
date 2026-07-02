@@ -31,6 +31,15 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
     }
     std::cout << "Opened: " << inputPath << std::endl;
 
+    std::string sPH_label = "Internal";
+
+    TLatex * ltx = new TLatex();
+    ltx->SetNDC();
+    ltx->SetTextSize(0.045);
+    ltx->SetTextAlign(31);
+
+    std::string final_label = (sPH_label.size() == 0) ? Form("#it{#bf{sPHENIX}}") : Form("#it{#bf{sPHENIX}} %s", sPH_label.c_str());
+
     // =====================================================================
     // Read histograms from the input file
     // =====================================================================
@@ -56,6 +65,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
     TH1D *h1D_Truth_ChargedHadron         = (TH1D*)fin->Get("h1D_Truth_ChargedHadron");
     TH2D *h2D_Truth_ChargedHadron_EtaPhi  = (TH2D*)fin->Get("h2D_Truth_ChargedHadron_EtaPhi");
     TH1D *h1D_Truth_ChargedHadron_Eta     = (TH1D*)fin->Get("h1D_Truth_ChargedHadron_Eta");
+
+    TH1D *h1D_correction = nullptr;
 
     // Basic sanity checks on required histograms
     if (!h2D_GoodProtoTracklet_EtaPhi || !h2D_GoodProtoTracklet_EtaPhi_rotated) { std::cout << "Error: Missing h2D_GoodProtoTracklet_EtaPhi histograms" << std::endl; return; }
@@ -102,6 +113,7 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
             double binW = h1D_ClusEtaInttZ_normalized->GetBinWidth(i);
             double val  = h1D_ClusEtaInttZ_normalized->GetBinContent(i);
             double err  = h1D_ClusEtaInttZ_normalized->GetBinError(i);
+            
             h1D_ClusEtaInttZ_normalized->SetBinContent(i, val / binW / nEvents);
             h1D_ClusEtaInttZ_normalized->SetBinError(i, err / binW / nEvents);
         }   
@@ -154,6 +166,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
         leg->AddEntry(hSub, "Signal - Rotated", "l");
         leg->SetBorderSize(0);
         leg->Draw();
+
+        ltx->DrawLatex(1 - gPad->GetRightMargin(), 1 - gPad->GetTopMargin() + 0.01, Form("%s", final_label.c_str()));
 
         // Compute integral from -0.15 to 0.15
         int binLo = hSub->FindBin(DeltaPhi_cut.first);
@@ -228,6 +242,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
             leg->SetBorderSize(0);
             leg->Draw();
 
+            ltx->DrawLatex(1 - gPad->GetRightMargin(), 1 - gPad->GetTopMargin() + 0.01, Form("%s", final_label.c_str()));
+
             // Integral from -0.15 to 0.15
             int binLo = hSub->FindBin(DeltaPhi_cut.first);
             int binHi = hSub->FindBin(DeltaPhi_cut.second);
@@ -252,7 +268,60 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
             h1D_TruedNdEta_perEvt->SetBinContent(i, val / binW / nEvents);
             h1D_TruedNdEta_perEvt->SetBinError(i, err / binW / nEvents);
         }
+
+        if (h1D_TruedNdEta_perEvt){
+            h1D_correction = (TH1D*) h1D_GoodProtoTracklet_Eta_Subtracted_normalized->Clone("h1D_correction");
+            h1D_correction -> Reset("ICESM");
+            h1D_correction -> GetYaxis() -> SetTitle("Correction (Reco. INTT doublets / Truth dN/d#eta)");
+            h1D_correction -> GetXaxis() -> SetTitle("#eta");
+
+            h1D_correction -> Sumw2(true);
+            h1D_GoodProtoTracklet_Eta_Subtracted_normalized -> Sumw2(true);
+            h1D_TruedNdEta_perEvt -> Sumw2(true);
+            
+            // h1D_correction -> Divide(h1D_GoodProtoTracklet_Eta_Subtracted_normalized,h1D_TruedNdEta_perEvt);
+
+            for (int i = 1; i <= h1D_correction->GetNbinsX(); i++){
+
+                double this_binx_center = h1D_correction->GetBinCenter(i);
+
+                double truth_val  = h1D_TruedNdEta_perEvt->GetBinContent(h1D_TruedNdEta_perEvt -> FindBin(this_binx_center));
+                double truth_err  = h1D_TruedNdEta_perEvt->GetBinError(h1D_TruedNdEta_perEvt -> FindBin(this_binx_center));
+
+                double reco_val  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinContent(i);
+                double reco_err  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinError(i);
+
+                if (reco_val == 0 || truth_val == 0){
+                    continue;
+                }
+
+                h1D_correction -> SetBinContent(
+                    i,
+                    reco_val / truth_val
+                );
+
+
+                h1D_correction -> SetBinError(
+                    i,
+                    (reco_val / truth_val) * sqrt(pow(truth_err/truth_val,2)+pow(reco_err/reco_val,2))
+                );
+            }
+
+            // for (int i = 1; i <= h1D_correction->GetNbinsX(); i++) {
+                
+            //     double truth_val  = h1D_TruedNdEta_perEvt->GetBinContent(i);
+            //     double truth_err  = h1D_TruedNdEta_perEvt->GetBinError(i);
+
+            //     double reco_val  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinContent(i);
+            //     double reco_err  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinError(i);
+
+            //     h1D_correction->SetBinContent(i, reco_val / truth_val);
+            //     h1D_correction->SetBinError(i, reco_err / truth_err);
+            // }
+
+        }
     }
+
 
     // =====================================================================
     // Write output
@@ -281,6 +350,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
 
     // Task 6
     h1D_GoodProtoTracklet_Eta_Subtracted_normalized->Write();
+
+    if (h1D_correction) {h1D_correction->Write();}
 
     // Task 8 summary
     h1D_DeltaPhi_IntegralEta->Write();
@@ -312,6 +383,47 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
 
     // Task 13: Normalized truth dN/deta
     if (h1D_TruedNdEta_perEvt) h1D_TruedNdEta_perEvt->Write();
+
+    TCanvas * c1 = new TCanvas("c1","c1",800,800);
+    if (h1D_TruedNdEta_perEvt){
+        c1 -> cd();
+
+        double the_higher = std::max(
+            h1D_TruedNdEta_perEvt->GetBinContent(h1D_TruedNdEta_perEvt->GetMaximumBin()),
+            h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinContent(h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetMaximumBin())
+        );
+
+        TH1D * h1D_frame = new TH1D(
+            "",";#eta;dN/d#eta (charged hadron or doublets)",
+            h1D_TruedNdEta_perEvt->GetNbinsX(),
+            h1D_TruedNdEta_perEvt->GetXaxis()->GetXmin(),
+            h1D_TruedNdEta_perEvt->GetXaxis()->GetXmax()
+        );
+
+        h1D_frame -> SetMaximum(the_higher * 1.4);
+        h1D_frame -> SetMinimum(0);
+        h1D_frame -> Draw("hist");
+
+        h1D_TruedNdEta_perEvt -> SetMaximum(the_higher * 1.4);        
+        h1D_TruedNdEta_perEvt -> SetLineColor(kRed);
+        h1D_TruedNdEta_perEvt -> Draw("hist same");
+
+        h1D_GoodProtoTracklet_Eta_Subtracted_normalized -> SetLineColor(kBlue);
+        h1D_GoodProtoTracklet_Eta_Subtracted_normalized -> Draw("hist same");
+
+        TLegend * leg1 = new TLegend(0.25, 0.7, 0.88, 0.9);
+        leg1->SetBorderSize(0);
+        leg1->SetFillStyle(0);
+        leg1->SetTextSize(0.03);
+        leg1->SetMargin(0.1);
+        leg1->AddEntry(h1D_TruedNdEta_perEvt,  "MC generator", "l");
+        leg1->AddEntry(h1D_GoodProtoTracklet_Eta_Subtracted_normalized,  "INTT doublets", "l");
+        leg1->Draw();
+
+        ltx->DrawLatex(1 - gPad->GetRightMargin(), 1 - gPad->GetTopMargin() + 0.01, Form("%s", final_label.c_str()));
+        
+        c1 -> Write("c1_Reco_truth_dNdEta_comp");
+    }
 
     fout->Close();
     fin->Close();
