@@ -21,6 +21,7 @@ InttDoubletMap::InttDoubletMap(
     std::pair<bool, std::pair<int,int>> isMBDChargeCut_in,
     std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in,
 
+    std::pair<bool, TH1D*> IsTrigEffiWeight_in,
     std::pair<bool, TH1D*> vtxZReweight_in,
     bool INTT_vtxZ_QA_in,
     std::pair<double, double> VtxZRange_in,
@@ -61,12 +62,35 @@ isBunchNumber_cut(isBunchNumber_cut_in),
 isMinBiasCut(isMinBiasCut_in),
 isUsedMBDz(isUsedMBDz_in),
 isMBDChargeCut(isMBDChargeCut_in),
-isTriggerSel(isTriggerSel_in)
+isTriggerSel(isTriggerSel_in),
+IsTrigEffiWeight(IsTrigEffiWeight_in)
 {
     track_gr = new TGraphErrors();
     fit_rz = new TF1("fit_rz","pol1",-1000,1000);
 
     cut_GoodProtoTracklet_DeltaPhi.second = DeltaPhiCut;
+
+    h1D_TrigEffiCorr = (IsTrigEffiWeight.first) ? (TH1D*)IsTrigEffiWeight.second->Clone() : nullptr;
+
+    if (IsTrigEffiWeight.first && h1D_TrigEffiCorr){
+        double total_sum = 0;
+        int total_nbins = 0;
+        for (int i = 1; i <= (int) h1D_TrigEffiCorr -> GetNbinsX() * 0.35; i++){
+
+            if (h1D_TrigEffiCorr->GetBinContent(i) == 0) {continue;}
+
+            total_sum += h1D_TrigEffiCorr->GetBinContent(i);
+            total_nbins += 1;
+        }
+
+        double average_bin_level = total_sum / total_nbins;
+
+        h1D_TrigEffiCorr -> Scale(1./average_bin_level);
+
+        for (int i = 1; i <= (int) h1D_TrigEffiCorr -> GetNbinsX(); i++){
+            std::cout<<"Centrality: "<<i<<", h1D_TrigEffiCorr bin content: "<<h1D_TrigEffiCorr->GetBinContent(i)<<std::endl;
+        }        
+    }
 
     if (data_type == 0){isTrigger = true;}
     if (data_type == 1){isStreamTrig = true;}
@@ -100,6 +124,7 @@ isTriggerSel(isTriggerSel_in)
     std::cout << "isMBDChargeCut : "<<isMBDChargeCut.first <<", range: "<< isMBDChargeCut.second.first<<", "<<isMBDChargeCut.second.second<<std::endl;
     std::cout << "isBunchNumber_cut: " << isBunchNumber_cut.first<<", range: "<<isBunchNumber_cut.second.first<<", "<<isBunchNumber_cut.second.second<<std::endl;
 
+    std::cout << "IsTrigEffiWeight: "<<IsTrigEffiWeight.first<<std::endl;
     std::cout << "vtxZReweight: " << vtxZReweight.first<<std::endl;
     std::cout << "INTT_vtxZ_QA: " << INTT_vtxZ_QA<<std::endl;
     std::cout << "VtxZRange: " << VtxZRange.first<<", "<<VtxZRange.second<<std::endl;
@@ -136,7 +161,15 @@ isTriggerSel(isTriggerSel_in)
         exit(1);
     }
 
+    if (isStreaming && IsTrigEffiWeight.first){
+        std::cout<<"No trigger efficiency correction needed for pure streaming crossings"<<std::endl;
+        exit(1);
+    }
 
+    if (vtxZReweight.first && runnumber != -1){
+        std::cout<<"Should not have the vtxZ weighting from the data"<<std::endl;
+        exit(1);
+    }
 }
 
 void InttDoubletMap::PrepareOutPutFileName()
@@ -170,6 +203,8 @@ void InttDoubletMap::PrepareOutPutFileName()
     output_filename += ((isTrigger || isStreamTrig) && isTriggerSel) ? "_TriggerSel" : "";
     output_filename += ((isTrigger || isStreamTrig) && isMBDChargeCut.first) ? Form("_MBDChargeCut%dto%d",isMBDChargeCut.second.first, isMBDChargeCut.second.second) : ""; 
     output_filename += (runnumber != -1 && (isStreamTrig || isStreaming) && isBunchNumber_cut.first) ? Form("_BunchNumberRange%dto%d", isBunchNumber_cut.second.first, isBunchNumber_cut.second.second) : "";
+
+    output_filename += (IsTrigEffiWeight.first) ? "_IsTrigEffiWeight" : "";
 
     output_filename += (vtxZReweight.first) ? "_vtxZReweight" : "";
     output_filename += (INTT_vtxZ_QA) ? "_VtxZQA" : "";
@@ -254,10 +289,11 @@ void InttDoubletMap::PrepareHistograms()
     h1D_eta_template_wide = new TH1D("h1D_eta_template_wide", "h1D_eta_template_wide", nEtaBin, EtaEdge_min, EtaEdge_max); // note : coarse
     h1D_eta_bin = new TH1D("h1D_eta_bin","h1D_eta_bin;Pair #eta;Entries",11,-1.1,1.1);
     h1D_phi_bin = new TH1D("h1D_phi_bin","h1D_phi_bin;Phi [radian];Entries",16,-3.2,3.2);
-    h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count;Entries",1,0.5,1.5);
+    h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count (0: no weight, 1:W_{Trig}, 2:W_{vtxZ}*W_{Trig});Entries",3,-0.5,2.5);
     h1D_BunchNumber = new TH1D("h1D_BunchNumber","h1D_BunchNumber;Selected BunchNumber;Entries",150,-20,130);
     h1D_MBDChargeSum = new TH1D("h1D_MBDChargeSum","h1D_MBDChargeSum;Selected MBD Charged Sum;Entries",250, 0, 500);
     h1D_ClusEtaInttZ = new TH1D("h1D_ClusEtaInttZ","h1D_ClusEtaInttZ;INTT ClusEta;Counts", nEtaBin, EtaEdge_min, EtaEdge_max);
+    h1D_centrality   = new TH1D("h1D_centrality","h1D_centrality;Event centrality;Counts",101,-0.5,100.5);
 
 
     h1D_map.insert( std::make_pair(
@@ -472,7 +508,7 @@ void InttDoubletMap::GetTrackletPair(std::vector<pair_str> &input_TrackletPair_v
 
 }
 
-void InttDoubletMap::FillPairs(std::vector<pair_str> input_TrackletPair_vec, bool isRotated, int Mbin_in, int vtxz_bin_in, double vtxZ_weight_in, int eID_in)
+void InttDoubletMap::FillPairs(std::vector<pair_str> input_TrackletPair_vec, bool isRotated, double vtxZ_weight_in, double TrigEffiCorrWeight_in, int eID_in)
 {
     Pair_DeltaPhi_vec.clear();
     Used_Clus_index_vec.clear();
@@ -489,19 +525,19 @@ void InttDoubletMap::FillPairs(std::vector<pair_str> input_TrackletPair_vec, boo
         double used_phi = this_pair_phi; // todo : change here
 
         if (fabs(this_pair.delta_phi) < cut_GoodProtoTracklet_DeltaPhi.second){
-            h2D_map[Form("h2D_GoodProtoTracklet_EtaPhi%s",rotated_text.c_str())] -> Fill(this_pair.pair_eta_num,used_phi);
+            h2D_map[Form("h2D_GoodProtoTracklet_EtaPhi%s",rotated_text.c_str())] -> Fill(this_pair.pair_eta_num,used_phi, vtxZ_weight_in * TrigEffiCorrWeight_in);
         }
 
-        int eta_bin = h1D_eta_bin -> Fill(this_pair.pair_eta_num);
+        int eta_bin = h1D_eta_bin -> Fill(this_pair.pair_eta_num, vtxZ_weight_in * TrigEffiCorrWeight_in);
         eta_bin = (eta_bin == -1) ? -1 : eta_bin - 1;
         if (eta_bin == -1) {continue;}
 
-        int phi_bin = h1D_phi_bin -> Fill(used_phi);
+        int phi_bin = h1D_phi_bin -> Fill(used_phi,vtxZ_weight_in * TrigEffiCorrWeight_in);
         phi_bin = (phi_bin == -1) ? -1 : phi_bin - 1;
         if (phi_bin == -1) {continue;}
 
         // note : for both rotated and non-rotated
-        h1D_map[Form("h1D_DeltaPhi_Phibin%d_Eta%d_VtxZ%d%s", phi_bin, eta_bin, 0, rotated_text.c_str())] -> Fill(this_pair.delta_phi);
+        h1D_map[Form("h1D_DeltaPhi_Phibin%d_Eta%d_VtxZ%d%s", phi_bin, eta_bin, 0, rotated_text.c_str())] -> Fill(this_pair.delta_phi, vtxZ_weight_in * TrigEffiCorrWeight_in);
 
     }
 
@@ -510,48 +546,16 @@ void InttDoubletMap::FillPairs(std::vector<pair_str> input_TrackletPair_vec, boo
         pair_str this_pair = input_TrackletPair_vec[pair_i];
         
         if (fabs(this_pair.delta_phi) < cut_GoodProtoTracklet_DeltaPhi.second){
-            h1D_map[Form("h1D_GoodProtoTracklet_Eta%s", rotated_text.c_str())] -> Fill(this_pair.pair_eta_num);            
+            h1D_map[Form("h1D_GoodProtoTracklet_Eta%s", rotated_text.c_str())] -> Fill(this_pair.pair_eta_num, vtxZ_weight_in * TrigEffiCorrWeight_in);            
         }
 
-        int eta_bin = h1D_eta_template_wide -> Fill(this_pair.pair_eta_num);
+        int eta_bin = h1D_eta_template_wide -> Fill(this_pair.pair_eta_num, vtxZ_weight_in * TrigEffiCorrWeight_in);
         eta_bin = (eta_bin == -1) ? -1 : eta_bin - 1;
         if (eta_bin == -1) {continue;}
 
         // note : for both rotated and non-rotated
-        h1D_map[Form("h1D_DeltaPhi_Eta%d%s", eta_bin, rotated_text.c_str())] -> Fill(this_pair.delta_phi);
+        h1D_map[Form("h1D_DeltaPhi_Eta%d%s", eta_bin, rotated_text.c_str())] -> Fill(this_pair.delta_phi, vtxZ_weight_in * TrigEffiCorrWeight_in);
     }
-    
-
-    // h1D_PairDeltaEta_inclusive
-    // h1D_PairDeltaPhi_inclusive
-
-    // Form("h1D_DeltaPhi_Mbin%d_Eta%d_VtxZ%d", Mbin, eta_bin, vtxz_bin)
-    // Form("h1D_typeA_DeltaPhi_Mbin%d_Eta%d_VtxZ%d", Mbin, eta_bin, vtxz_bin)
-    // Form("h1D_DeltaPhi_Mbin%d_Eta%d_VtxZ%d_rotated", Mbin, eta_bin, vtxz_bin)
-    // Form("h1D_typeA_DeltaPhi_Mbin%d_Eta%d_VtxZ%d_rotated", Mbin, eta_bin, vtxz_bin)
-
-    // Form("h1D_BestPair_DeltaEta_Mbin%d",Mbin_in)
-    // Form("h1D_BestPair_DeltaPhi_Mbin%d",Mbin_in)
-    // Form("h1D_BestPair_ClusPhiSize_Mbin%d",Mbin_in)
-    // Form("h1D_BestPair_ClusAdc_Mbin%d",Mbin_in)
-    // Form("h1D_typeA_BestPair_DeltaEta_Mbin%d",Mbin_in)
-    // Form("h1D_typeA_BestPair_DeltaPhi_Mbin%d",Mbin_in)
-    // Form("h1D_typeA_BestPair_ClusPhiSize_Mbin%d",Mbin_in)
-    // Form("h1D_typeA_BestPair_ClusAdc_Mbin%d",Mbin_in)
-
-    // Form("h2D_BestPairEtaVtxZ_Mbin%d",Mbin_in)
-    // Form("h2D_BestPairEtaVtxZ_Mbin%d_FineBin",Mbin_in)
-    // Form("h2D_typeA_BestPairEtaVtxZ_Mbin%d",Mbin_in)
-    // Form("h2D_typeA_BestPairEtaVtxZ_Mbin%d_FineBin",Mbin_in)
-
-    // Form("h2D_GoodProtoTracklet_EtaVtxZ_Mbin%d", Mbin_in)
-    // Form("h2D_GoodProtoTracklet_EtaVtxZ_Mbin%d_FineBin", Mbin_in)
-    // Form("h2D_GoodProtoTracklet_EtaVtxZ_Mbin%d_rotated", Mbin_in)
-
-    // Form("h2D_typeA_GoodProtoTracklet_EtaVtxZ_Mbin%d", Mbin_in)
-    // Form("h2D_typeA_GoodProtoTracklet_EtaVtxZ_Mbin%d_FineBin", Mbin_in)
-    // Form("h2D_typeA_GoodProtoTracklet_EtaVtxZ_Mbin%d_rotated", Mbin_in)
-
     
 }
 
@@ -609,7 +613,7 @@ void InttDoubletMap::MainProcess()
 
         if (RandInttZ){
             // INTTvtxZ = rand3 -> Uniform(VtxZEdge_min,VtxZEdge_max);
-            INTTvtxZ = rand3 -> Uniform(-10, 10);
+            INTTvtxZ = rand3 -> Uniform(VtxZRange.first, VtxZRange.second);
             INTTvtxZError = 0.;
         }
 
@@ -702,12 +706,24 @@ void InttDoubletMap::MainProcess()
         if ((isTrigger || isStreamTrig) && isMBDChargeCut.first && (MBD_charge_sum < isMBDChargeCut.second.first || MBD_charge_sum > isMBDChargeCut.second.second)) {continue;}
         test_count[21] += 1;
 
-        if (vtxZReweight.first && runnumber != -1){
-            std::cout<<"Should not have the vtxZ weighting from the data"<<std::endl;
+        double TrigEffiCorrection_weight = 1.0;
+        if (IsTrigEffiWeight.first && h1D_TrigEffiCorr != nullptr){
+            TrigEffiCorrection_weight = 1./h1D_TrigEffiCorr->GetBinContent(h1D_TrigEffiCorr -> FindBin(MBD_centrality));
+
+            if (TrigEffiCorrection_weight == 0){
+                std::cout<< "MBD_centrality: "<<MBD_centrality<<", h1D_TrigEffiCorr -> FindBin(MBD_centrality): "<<h1D_TrigEffiCorr -> FindBin(MBD_centrality)<<", TrigEffiCorrection_weight: "<<TrigEffiCorrection_weight<<std::endl;
+                exit(1);
+            }
+        }
+        else if (IsTrigEffiWeight.first && h1D_TrigEffiCorr == nullptr){
+            std::cout << "IsTrigEffiWeight is true, but h1D_TrigEffiCorr is nullptr" << std::endl;
             exit(1);
         }
+        else {
+            TrigEffiCorrection_weight = 1.0;
+        }
 
-        double INTTvtxZWeighting;
+        double INTTvtxZWeighting = 1.0;
         if (vtxZReweight.first && h1D_INTT_vtxZ_reweighting != nullptr){
             INTTvtxZWeighting = h1D_INTT_vtxZ_reweighting -> GetBinContent(h1D_INTT_vtxZ_reweighting -> FindBin(INTTvtxZ));
         }
@@ -728,46 +744,49 @@ void InttDoubletMap::MainProcess()
 
                 if (PrimaryG4P_isChargeHadron->at(true_i) != 1) { continue; }
                 NHadrons += 1;
-                h2D_map["h2D_Truth_ChargedHadron_EtaPhi"] -> Fill(PrimaryG4P_Eta->at(true_i), PrimaryG4P_Phi->at(true_i));
-                h1D_map["h1D_Truth_ChargedHadron_Eta"] -> Fill(PrimaryG4P_Eta->at(true_i));
+                h2D_map["h2D_Truth_ChargedHadron_EtaPhi"] -> Fill(PrimaryG4P_Eta->at(true_i), PrimaryG4P_Phi->at(true_i), TrigEffiCorrection_weight);
+                h1D_map["h1D_Truth_ChargedHadron_Eta"] -> Fill(PrimaryG4P_Eta->at(true_i), TrigEffiCorrection_weight);
             }
 
-            h1D_map["h1D_Truth_ChargedHadron"] -> Fill(NHadrons);
+            h1D_map["h1D_Truth_ChargedHadron"] -> Fill(NHadrons, TrigEffiCorrection_weight);
         }
 
-        if (runnumber != -1) {h1D_BunchNumber -> Fill(BunchNumber);}
+        if (runnumber != -1) {h1D_BunchNumber -> Fill(BunchNumber, INTTvtxZWeighting * TrigEffiCorrection_weight);}
 
-        if ((isTrigger || isStreamTrig)) {h1D_MBDChargeSum -> Fill(MBD_charge_sum);}
+        if ((isTrigger || isStreamTrig)) {h1D_MBDChargeSum -> Fill(MBD_charge_sum, INTTvtxZWeighting * TrigEffiCorrection_weight);}
+        if ((isTrigger || isStreamTrig)) {h1D_centrality -> Fill(MBD_centrality, INTTvtxZWeighting * TrigEffiCorrection_weight);}
 
         test_count[23] += 1;
         
         PrepareClusterVec();
 
-        h1D_map["h1D_InttVtxZ"] -> Fill(INTTvtxZ, INTTvtxZWeighting);
+        h1D_map["h1D_InttVtxZ"] -> Fill(INTTvtxZ, INTTvtxZWeighting * TrigEffiCorrection_weight);
 
         for (ClusHistogram::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
-            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
-            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz);
+            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting * TrigEffiCorrection_weight);
+            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz, INTTvtxZWeighting * TrigEffiCorrection_weight);
         }
 
         for (ClusHistogram::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
-            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting);
-            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz);
+            h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting * TrigEffiCorrection_weight);
+            h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz, INTTvtxZWeighting * TrigEffiCorrection_weight);
         } 
         
         test_count[24] += 1;
 
         GetTrackletPair(evt_TrackletPair_vec, false);
-        FillPairs(evt_TrackletPair_vec, false, -999, -999, INTTvtxZWeighting, i);
+        FillPairs(evt_TrackletPair_vec, false, INTTvtxZWeighting, TrigEffiCorrection_weight, i);
 
         test_count[25] += 1;
 
         GetTrackletPair(evt_TrackletPairRotate_vec, true);  
-        FillPairs(evt_TrackletPairRotate_vec, true, -999, -999, INTTvtxZWeighting, i);
+        FillPairs(evt_TrackletPairRotate_vec, true, INTTvtxZWeighting, TrigEffiCorrection_weight, i);
 
         test_count[26] += 1;
 
-        h1D_nEvent -> Fill(1);
+        h1D_nEvent -> Fill(0); // note : no weight
+        h1D_nEvent -> Fill(1, TrigEffiCorrection_weight); // note : Trigger correction
+        h1D_nEvent -> Fill(2, INTTvtxZWeighting * TrigEffiCorrection_weight); // note : Trigger correction x z-vertex weight
     }
 
     for (int ele = 0; ele < test_count.size(); ele++){
@@ -785,6 +804,7 @@ void InttDoubletMap::EndRun()
     h1D_BunchNumber -> Write();
     h1D_MBDChargeSum -> Write();
     h1D_ClusEtaInttZ -> Write();
+    h1D_centrality   -> Write();
 
     for (auto &pair : h2D_map){
 

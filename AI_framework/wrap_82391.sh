@@ -1,6 +1,7 @@
 #! /bin/bash
 
 cd /sphenix/user/ChengWei/INTT/INTTdNdEtaOO/AI_framework
+# for bin in $(seq 0 1); do
 for bin in $(seq 0 10); do
     python3 run_pass.py pass_configs/data_82391_baseline.py --step all \
         --set _centrality_bin=${bin} \
@@ -56,12 +57,3 @@ for bin in $(seq 0 10); do
 
     sleep 20;
 done
-
-# for bin in $(seq 0 10); do
-#     python3 run_pass.py pass_configs/data_82391_baseline.py --step all \
-#         --set _centrality_bin=${bin} \
-#         --set _subfoldername=baseline \
-#         --set _cluster_adc=30 \
-#         --set _cluster_phi_size=40 \
-#         --set _delta_phi_cut=0.15
-# done

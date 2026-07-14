@@ -117,6 +117,13 @@ class PassConfig:
     isBunchNumber_cut: PairBoolInt = (False, (-10, 1000))
     """(enable, (min_bunch, max_bunch))  bunch-number cut."""
 
+    IsTrigEffiWeight: bool = False
+    TrigEffiWeight_dir: str = ""
+    TrigEffiWeight_file: str = ""
+    TrigEffiWeight_hist: str = ""
+
+
+
     vtxZReweight: bool = False
     """
     Simple bool flag: True = enable vtxZ reweighting, False = disable.
@@ -217,10 +224,10 @@ class PassConfig:
     )
     """Directory containing Run_PrepareHist.C, run_condor.job, run_job.sh."""
 
-    analysis_macro: str = (
-        "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/macro/InttDoubletMap/InttDoubletMap.C"
+    analysis_macro_dir: str = (
+        "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/macro/InttDoubletMap"
     )
-    """Absolute path to InttDoubletMap.C (post-merge analysis step)."""
+    """Directory containing InttDoubletMap_template.C (post-merge analysis step)."""
 
     # ── Notes ─────────────────────────────────────────────────────────────────
     notes: str = ""
@@ -245,48 +252,52 @@ class PassConfig:
             "=" * 60,
             f"  Pass : {self.pass_name}",
             "=" * 60,
-            f"  Run number         : {self.run_number}",
-            f"  N events / job     : {self.n_events}",
+            f"  Run number             : {self.run_number}",
+            f"  N events / job         : {self.n_events}",
             "",
             "── I/O ─────────────────────────────────────────────────",
-            f"  input_directory    : {self.input_directory}",
-            f"  input_file_name    : {self.input_file_name}",
-            f"  output_directory   : {self.output_directory}",
-            f"  output suffix      : {self.output_file_name_suffix}",
+            f"  input_directory        : {self.input_directory}",
+            f"  input_file_name        : {self.input_file_name}",
+            f"  output_directory       : {self.output_directory}",
+            f"  output suffix          : {self.output_file_name_suffix}",
             "",
             "── Analysis parameters ──────────────────────────────────",
-            f"  data_type          : {self.data_type}  (0=pure_trig, 1=stream_trig, 2=stream_data)",
-            f"  vertexXY (cm)      : {self.vertexXYIncm}",
-            f"  VtxZ range (cm)    : {self.VtxZRange}",
-            f"  isUsedMBDz         : {self.isUsedMBDz}",
-            f"  BcoFullDiffCut     : {self.BcoFullDiffCut}",
-            f"  CentralityBin      : {self.CentralityBin}",
-            f"  isMinBiasCut       : {self.isMinBiasCut}",
-            f"  isTriggerSel       : {self.isTriggerSel}",
-            f"  isMBDChargeCut     : {self.isMBDChargeCut}",
-            f"  isBunchNumber_cut  : {self.isBunchNumber_cut}",
-            f"  vtxZReweight       : {self.vtxZReweight}",
-            f"    zvtx_weight_dir  : {self.zvtx_weight_dir}",
-            f"    zvtx_weight_file : {self.zvtx_weight_file}",
-            f"    zvtx_weight_hist : {self.zvtx_weight_hist}",
-            f"  INTT_vtxZ_QA       : {self.INTT_vtxZ_QA}",
-            f"  ColMulMask         : {self.ColMulMask}",
-            f"  isClusQA           : {self.isClusQA}",
-            f"  DeltaPhiCut        : {self.DeltaPhiCut}",
-            f"  HaveGeoOffsetTag   : {self.HaveGeoOffsetTag}",
+            f"  data_type              : {self.data_type}  (0=pure_trig, 1=stream_trig, 2=stream_data)",
+            f"  vertexXY (cm)          : {self.vertexXYIncm}",
+            f"  VtxZ range (cm)        : {self.VtxZRange}",
+            f"  isUsedMBDz             : {self.isUsedMBDz}",
+            f"  BcoFullDiffCut         : {self.BcoFullDiffCut}",
+            f"  CentralityBin          : {self.CentralityBin}",
+            f"  isMinBiasCut           : {self.isMinBiasCut}",
+            f"  isTriggerSel           : {self.isTriggerSel}",
+            f"  isMBDChargeCut         : {self.isMBDChargeCut}",
+            f"  isBunchNumber_cut      : {self.isBunchNumber_cut}",
+            f"  vtxZReweight ----------: {self.vtxZReweight}",
+            f"    zvtx_weight_dir      : {self.zvtx_weight_dir}",
+            f"    zvtx_weight_file     : {self.zvtx_weight_file}",
+            f"    zvtx_weight_hist     : {self.zvtx_weight_hist}",
+            f"  IsTrigEffiWeight ------: {self.IsTrigEffiWeight}",
+            f"    TrigEffiWeight_dir   : {self.TrigEffiWeight_dir}",
+            f"    TrigEffiWeight_file  : {self.TrigEffiWeight_file}",
+            f"    TrigEffiWeight_hist  : {self.TrigEffiWeight_hist}",
+            f"  INTT_vtxZ_QA           : {self.INTT_vtxZ_QA}",
+            f"  ColMulMask             : {self.ColMulMask}",
+            f"  isClusQA               : {self.isClusQA}",
+            f"  DeltaPhiCut            : {self.DeltaPhiCut}",
+            f"  HaveGeoOffsetTag       : {self.HaveGeoOffsetTag}",
             "",
             "── HTCondor ─────────────────────────────────────────────",
-            f"  n_condor_jobs      : {self.n_condor_jobs}",
-            f"  job_offset         : {self.job_offset}",
-            f"  memory / job       : {self.condor_request_memory}",
-            f"  priority           : {self.condor_priority}",
-            f"  concurrency limit  : {self.condor_concurrency_limit}",
+            f"  n_condor_jobs          : {self.n_condor_jobs}",
+            f"  job_offset             : {self.job_offset}",
+            f"  memory / job           : {self.condor_request_memory}",
+            f"  priority               : {self.condor_priority}",
+            f"  concurrency limit      : {self.condor_concurrency_limit}",
             "",
             "── Merge (run_random_merge) ──────────────────────────────",
-            f"  IsShuffle          : {int(self.merge_is_shuffle)}",
-            f"  N_merged_files     : {self.merge_n_files}",
-            f"  mega_merge         : {int(self.merge_mega_merge)}",
-            f"  filename template  : {self.merge_filename_template or '(auto-detect)'}",
+            f"  IsShuffle              : {int(self.merge_is_shuffle)}",
+            f"  N_merged_files         : {self.merge_n_files}",
+            f"  mega_merge             : {int(self.merge_mega_merge)}",
+            f"  filename template      : {self.merge_filename_template or '(auto-detect)'}",
             "",
             "── Notes ────────────────────────────────────────────────",
             f"  {self.notes}" if self.notes else "  (none)",

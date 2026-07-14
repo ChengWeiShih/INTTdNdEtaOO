@@ -43,6 +43,7 @@ import sys
 import textwrap
 import time
 from pathlib import Path
+from typing import Optional
 
 # ── Make sure PassConfig is importable regardless of CWD ─────────────────────
 FRAMEWORK_DIR = Path(__file__).resolve().parent
@@ -81,7 +82,7 @@ def run(cmd: str, dry: bool = False, cwd: str = None) -> int:
     result = subprocess.run(cmd, shell=True, cwd=cwd)
     return result.returncode
 
-def load_config(config_path: str, pre_inject: dict | None = None) -> PassConfig:
+def load_config(config_path: str, pre_inject: Optional[dict] = None) -> PassConfig:
     """
     Load a PassConfig from a Python file that defines a variable ``cfg``.
 
@@ -153,226 +154,165 @@ def _cpp_pair_bool_int(v) -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Generate a per-pass Run_PrepareHist_<pass_name>.C
+# Step 1 helpers – header generation + template copy
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def generate_run_prepare_hist(cfg: PassConfig, out_dir: str) -> str:
+# Placeholder string that must appear in Run_PrepareHist_template.C:
+#   #include "header_to_be_replace"
+_HEADER_PLACEHOLDER = "header_to_be_replace"
+
+
+def generate_params_header(cfg: PassConfig, out_dir: str) -> str:
     """
-    Write a fully self-contained Run_PrepareHist_<pass_name>.C into out_dir,
-    modelled exactly on Run_PrepareHist_template.C.
+    Write a C++ namespace header file into out_dir that contains every
+    InttDoubletMap parameter from PassConfig as a compile-time constant.
 
-    The generated macro:
-      - Has an int return type (returns 888 on success, 666 if vtxZ reweight
-        file is missing)
-      - Loads the vtxZ reweight histogram via GetTH1D() if enabled
-      - Uses output_directory directly (no /baseline sub-dir appended)
-      - Accepts only the 6 per-job arguments from run_job.sh; all
-        InttDoubletMap parameters are baked in as C++ literals.
+    The generated header is #included by the copied Run_PrepareHist_<pass>.C
+    and exposes a namespace ``PassParams`` that the template macro reads.
 
-    The original Run_PrepareHist.C and Run_PrepareHist_template.C are NEVER
-    modified.
-
-    Returns the absolute path to the generated file.
+    Returns the absolute path to the generated header file.
     """
+    macro_name  = f"Run_PrepareHist_{cfg.pass_name}"
+    header_name = f"{macro_name}_params.h"
+    header_path = os.path.join(out_dir, header_name)
 
-    macro_name = f"Run_PrepareHist_{cfg.pass_name}"
-    out_path   = os.path.join(out_dir, f"{macro_name}.C")
-
-    # Absolute paths to the shared header and shared library
-    intt_dir    = os.path.dirname(cfg.macro_dir)   # …/InttDoubletMap
-    header_path = os.path.join(intt_dir, "InttDoubletMap.h")
-    so_path     = os.path.join(intt_dir, "libInttDoubletMap.so")
-
-    # ── vtxZReweight block ── matches template lines 63-86 ───────────────────
-    # vtxZReweight_in is now a plain bool in the template;
-    # the macro builds pair<int,TH1D*> vtxZReweight_final internally.
-    vz_enable = cfg.vtxZReweight   # plain bool
-
-    vtx_decl = textwrap.dedent(f"""\
-        std::string zvtx_weight_dir  = "{cfg.zvtx_weight_dir}";
-        std::string zvtx_weight_file = "{cfg.zvtx_weight_file}";
-        std::string zvtx_weight_hist = "{cfg.zvtx_weight_hist}";
-
-        // note : plain bool flag – macro constructs the pair internally
-        bool vtxZReweight_in = {_cpp_bool(vz_enable)};
-
-        std::pair<int, TH1D*> vtxZReweight_final = {{vtxZReweight_in, nullptr}};
-    """)
-
-    vtx_load = textwrap.dedent("""\
-        if (vtxZReweight_final.first) {
-          vtxZReweight_final.second = GetTH1D(
-            zvtx_weight_dir, zvtx_weight_file, zvtx_weight_hist
-          );
-        }
-
-        if (vtxZReweight_final.first && vtxZReweight_final.second == nullptr) {
-          std::cout << "no vtxZReweight map, kill the job" << std::endl;
-          return 666;
-        }
-    """)
-
-    # ── ColMulMask block ──────────────────────────────────────────────────────
-    colmul_decl = textwrap.dedent(f"""\
-        std::string ColMulMask_map_mother_dir = "{cfg.ColMulMask_map_dir}";
-        std::string ColMulMask_map_file       = "{cfg.ColMulMask_map_file}";
-    """)
-
-    colmul_set = textwrap.dedent("""\
-        if (ColMulMask_in) {
-          TLHN->SetGoodColMap(
-            GetGoodColMap(ColMulMask_map_mother_dir, ColMulMask_map_file,
-                          TLHN->GetGoodColMapName())
-          );
-        }
-    """) if cfg.ColMulMask else "// note : ColMulMask disabled for this pass\n"
-
-    # ── Default filename for the function signature (replace placeholder) ─────
     default_filename = cfg.input_file_name.replace("{process:05d}", "00000")
 
-    # ── Build the C++ source ──────────────────────────────────────────────────
-    content = textwrap.dedent(f"""\
-        // =====================================================================
-        // AUTO-GENERATED by run_pass.py  –  DO NOT EDIT BY HAND
-        // Template : Run_PrepareHist_template.C
-        // Pass     : {cfg.pass_name}
-        // Notes    : {cfg.notes or "(none)"}
-        //
-        // All InttDoubletMap parameters are baked in as C++ literals.
-        // To change any parameter, edit the PassConfig and re-run:
-        //   python3 run_pass.py <config.py> --step 1
-        // =====================================================================
-
-        #include "{header_path}"
-
-        R__LOAD_LIBRARY({so_path})
-
-        TH2D * GetGoodColMap(std::string ColMulMask_map_dir_in,
-                             std::string ColMulMask_map_file_in,
-                             std::string map_name_in)
-        {{
-          TFile * f = TFile::Open(Form("%s/%s",
-            ColMulMask_map_dir_in.c_str(), ColMulMask_map_file_in.c_str()));
-          TH2D * h = (TH2D*)f->Get(map_name_in.c_str());
-          return h;
-        }}
-
-        TH1D * GetTH1D(std::string h1D_input_directory,
-                       std::string h1D_filename,
-                       std::string h1D_name)
-        {{
-          TFile * f1 = TFile::Open(Form("%s/%s",
-            h1D_input_directory.c_str(), h1D_filename.c_str()));
-          TH1D * h1 = (TH1D*)f1->Get(h1D_name.c_str());
-          return h1;
-        }}
-
-        // note : function name must match the filename (ROOT requirement)
-        int {macro_name}(
-          int    process_id       = 0,
-          int    run_num          = {cfg.run_number},
-          int    nevents          = {cfg.n_events},
-          string input_directory  = "{cfg.input_directory}",
-          string input_filename   = "{default_filename}",
-          string output_directory = "{cfg.output_directory}"
-        )
-        {{
-
-          // ── vtxZ reweight paths + flag ───────────────────────────────────
-          {textwrap.indent(vtx_decl.strip(), '  ')}
-
-          // ── vtxZ reweight load + guard ───────────────────────────────────
-          {textwrap.indent(vtx_load.strip(), '  ')}
-
-          // ── ColMulMask map paths ─────────────────────────────────────────
-          {textwrap.indent(colmul_decl.strip(), '  ')}
-
-          // ── fixed parameters from PassConfig ────────────────────────────
-          // todo : modify here via PassConfig – do not edit this file directly
-          std::string output_file_name_suffix = "{cfg.output_file_name_suffix}";
-          std::pair<double, double> vertexXYIncm = {_cpp_pair_double(cfg.vertexXYIncm)};
-
-          int  data_type_in     = {cfg.data_type};  // 0=pure_trig, 1=stream_trig, 2=stream_data
-          bool isUsedMBDz_in    = {_cpp_bool(cfg.isUsedMBDz)};
-
-          bool BcoFullDiffCut_in = {_cpp_bool(cfg.BcoFullDiffCut)};
-          int  CentralityBin_in  = {cfg.CentralityBin};
-          bool isMinBiasCut_in   = {_cpp_bool(cfg.isMinBiasCut)};
-          bool isTriggerSel_in   = {_cpp_bool(cfg.isTriggerSel)};
-          std::pair<bool, std::pair<int,int>> isMBDChargeCut_in   = {_cpp_pair_bool_int(cfg.isMBDChargeCut)};
-          std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = {_cpp_pair_bool_int(cfg.isBunchNumber_cut)};
-
-          bool INTT_vtxZ_QA_in  = {_cpp_bool(cfg.INTT_vtxZ_QA)};
-          std::pair<double, double> VtxZRange_in = {_cpp_pair_double(cfg.VtxZRange)};
-
-          bool ColMulMask_in    = {_cpp_bool(cfg.ColMulMask)};
-          std::pair<bool, std::pair<double,double>> isClusQA_in = {_cpp_pair_bool_double(cfg.isClusQA)};  // note : {{adc, phi size}}
-          double DeltaPhiCut_in = {cfg.DeltaPhiCut};
-
-          bool HaveGeoOffsetTag_in = {_cpp_bool(cfg.HaveGeoOffsetTag)};
-
-          // ── output directory ─────────────────────────────────────────────
-          std::string final_output_directory = output_directory;
-          system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
-
-          // ── construct InttDoubletMap ─────────────────────────────────────
-          InttDoubletMap * TLHN = new InttDoubletMap(
-            process_id,
-            run_num,
-            nevents,
-            input_directory,
-            input_filename,
-            final_output_directory,
-
-            output_file_name_suffix,
-            vertexXYIncm,
-
-            data_type_in,
-            isUsedMBDz_in,
-
-            BcoFullDiffCut_in,
-            CentralityBin_in,
-            isMinBiasCut_in,
-            isTriggerSel_in,
-            isMBDChargeCut_in,
-            isBunchNumber_cut_in,
-
-            vtxZReweight_final,
-            INTT_vtxZ_QA_in,
-            VtxZRange_in,
-
-            ColMulMask_in,
-            isClusQA_in,
-            DeltaPhiCut_in,
-
-            HaveGeoOffsetTag_in
-          );
-
-          {textwrap.indent(colmul_set.strip(), '  ')}
-
-          string final_output_file_name = TLHN->GetOutputFileName();
-          cout << "final_output_file_name: " << final_output_file_name << endl;
-          system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;",
-            final_output_directory.c_str(), final_output_file_name.c_str(),
-            final_output_directory.c_str(), final_output_file_name.c_str()));
-
-          TLHN->MainProcess();
-          TLHN->EndRun();
-
-          system(Form("mv %s/%s %s/completed",
-            final_output_directory.c_str(), final_output_file_name.c_str(),
-            final_output_directory.c_str()));
-
-          return 888;
-        }}
-    """)
+    lines = [
+        "// ======================================================================",
+        "// AUTO-GENERATED by run_pass.py  –  DO NOT EDIT BY HAND",
+        f"// Pass  : {cfg.pass_name}",
+        f"// Notes : {cfg.notes or '(none)'}",
+        "//",
+        "// Re-generate by re-running Step 1:",
+        "//   python3 run_pass.py <config.py> --step 1",
+        "// ======================================================================",
+        "",
+        "#pragma once",
+        "#include <string>",
+        "#include <utility>",
+        "",
+        "namespace PassParams {",
+        "",
+        "  // ── per-job arguments (defaults used when running interactively) ──",
+        f'  const int         default_process_id      = 0;',
+        f'  const int         default_run_num         = {cfg.run_number};',
+        f'  const int         default_nevents         = {cfg.n_events};',
+        f'  const std::string default_input_directory = "{cfg.input_directory}";',
+        f'  const std::string default_input_filename  = "{default_filename}";',
+        f'  const std::string default_output_directory= "{cfg.output_directory}";',
+        "",
+        "  // ── TrigEffiWeight ──────────────────────────────────────────────────",
+        f'  const bool        IsTrigEffiWeight        = {_cpp_bool(cfg.IsTrigEffiWeight)};',
+        f'  const std::string TrigEffiWeight_dir        = "{cfg.TrigEffiWeight_dir}";',
+        f'  const std::string TrigEffiWeight_file       = "{cfg.TrigEffiWeight_file}";',
+        f'  const std::string TrigEffiWeight_hist       = "{cfg.TrigEffiWeight_hist}";',
+        "",
+        "  // ── vtxZ reweight ──────────────────────────────────────────────────",
+        f'  const bool        vtxZReweight            = {_cpp_bool(cfg.vtxZReweight)};',
+        f'  const std::string zvtx_weight_dir         = "{cfg.zvtx_weight_dir}";',
+        f'  const std::string zvtx_weight_file        = "{cfg.zvtx_weight_file}";',
+        f'  const std::string zvtx_weight_hist        = "{cfg.zvtx_weight_hist}";',
+        "",
+        "  // ── ColMulMask map ────────────────────────────────────────────────",
+        f'  const std::string ColMulMask_map_dir      = "{cfg.ColMulMask_map_dir}";',
+        f'  const std::string ColMulMask_map_file     = "{cfg.ColMulMask_map_file}";',
+        "",
+        "  // ── InttDoubletMap constructor parameters ───────────────────────────",
+        f'  const std::string output_file_name_suffix = "{cfg.output_file_name_suffix}";',
+        f'  const std::pair<double,double> vertexXYIncm       = {_cpp_pair_double(cfg.vertexXYIncm)};',
+        f'  const int         data_type               = {cfg.data_type};  // 0=pure_trig 1=stream_trig 2=stream_data',
+        f'  const bool        isUsedMBDz              = {_cpp_bool(cfg.isUsedMBDz)};',
+        f'  const bool        BcoFullDiffCut          = {_cpp_bool(cfg.BcoFullDiffCut)};',
+        f'  const int         CentralityBin           = {cfg.CentralityBin};',
+        f'  const bool        isMinBiasCut            = {_cpp_bool(cfg.isMinBiasCut)};',
+        f'  const bool        isTriggerSel            = {_cpp_bool(cfg.isTriggerSel)};',
+        f'  const std::pair<bool,std::pair<int,int>>    isMBDChargeCut    = {_cpp_pair_bool_int(cfg.isMBDChargeCut)};',
+        f'  const std::pair<bool,std::pair<int,int>>    isBunchNumber_cut = {_cpp_pair_bool_int(cfg.isBunchNumber_cut)};',
+        f'  const bool        INTT_vtxZ_QA            = {_cpp_bool(cfg.INTT_vtxZ_QA)};',
+        f'  const std::pair<double,double> VtxZRange          = {_cpp_pair_double(cfg.VtxZRange)};',
+        f'  const bool        ColMulMask              = {_cpp_bool(cfg.ColMulMask)};',
+        f'  const std::pair<bool,std::pair<double,double>> isClusQA = {_cpp_pair_bool_double(cfg.isClusQA)};  // (adc, phi_size)',
+        f'  const double      DeltaPhiCut             = {cfg.DeltaPhiCut};',
+        f'  const bool        HaveGeoOffsetTag        = {_cpp_bool(cfg.HaveGeoOffsetTag)};',
+        "",
+        "}  // namespace PassParams",
+        "",
+    ]
 
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w") as f:
-        f.write(content)
+    with open(header_path, "w") as fh:
+        fh.write("\n".join(lines))
 
-    log(f"Generated macro : {out_path}")
-    return out_path
+    log(f"Generated header  : {header_path}")
+    return header_path
+
+
+def copy_and_patch_template(cfg: PassConfig, header_path: str,
+                            out_dir: str) -> str:
+    """
+    Copy Run_PrepareHist_template.C from cfg.macro_dir into out_dir,
+    rename it to Run_PrepareHist_<pass_name>.C, and replace the line
+
+        #include "header_to_be_replace"
+
+    with the absolute path to the generated header.
+
+    Returns the absolute path to the patched macro file.
+    """
+    import shutil
+
+    macro_name   = f"Run_PrepareHist_{cfg.pass_name}"
+    template_src = os.path.join(cfg.macro_dir, "Run_PrepareHist_template.C")
+    macro_dst    = os.path.join(out_dir, f"{macro_name}.C")
+
+    if not os.path.isfile(template_src):
+        raise FileNotFoundError(
+            f"Template not found: {template_src}\n"
+            f"Set cfg.macro_dir to the directory containing "
+            f"Run_PrepareHist_template.C"
+        )
+
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    shutil.copy2(template_src, macro_dst)
+    log(f"Copied template   : {template_src}")
+    log(f"             → {macro_dst}")
+
+    # Patch: replace  #include "header_to_be_replace"
+    #   with          #include "/abs/path/to/<pass>_params.h"
+    abs_header = os.path.abspath(header_path)
+    # Use Python for the replacement (avoids sed quoting issues with paths)
+    with open(macro_dst) as fh:
+        src = fh.read()
+
+    old = f'#include "{_HEADER_PLACEHOLDER}"'
+    new = f'#include "{abs_header}"'
+    if old not in src:
+        log(
+            f"WARNING: placeholder '{old}' not found in template. "
+            f"Add the line  {old}  to {template_src}",
+            "WARN",
+        )
+    else:
+        src = src.replace(old, new, 1)
+        
+        # Patch the function name to match the file name
+        old_func = "int Run_PrepareHist_template("
+        new_func = f"int {macro_name}("
+        if old_func in src:
+            src = src.replace(old_func, new_func, 1)
+            log(f"Patched func name : 'Run_PrepareHist_template' → '{macro_name}'")
+        else:
+            log(f"WARNING: function signature '{old_func}' not found in template.", "WARN")
+            
+        with open(macro_dst, "w") as fh:
+            fh.write(src)
+        log(f"Patched include   : '{_HEADER_PLACEHOLDER}' → {abs_header}")
+
+    return macro_dst
+
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -448,11 +388,14 @@ def step1_submit(cfg: PassConfig, dry: bool = False) -> None:
     generated_dir  = os.path.join(cfg.output_directory, "generated_macro")
     macro_name     = f"Run_PrepareHist_{cfg.pass_name}"
     macro_out_path = os.path.join(generated_dir, f"{macro_name}.C")
+    header_path    = os.path.join(generated_dir, f"{macro_name}_params.h")
 
     if not dry:
-        generate_run_prepare_hist(cfg, generated_dir)
+        hdr = generate_params_header(cfg, generated_dir)
+        copy_and_patch_template(cfg, hdr, generated_dir)
     else:
-        log(f"[dry] Would generate: {macro_out_path}")
+        log(f"[dry] Would generate header : {header_path}")
+        log(f"[dry] Would copy+patch template → {macro_out_path}")
 
     # Write the custom condor job file
     job_file = os.path.join(cfg.output_directory, f"run_condor_{cfg.pass_name}.job")
@@ -576,22 +519,106 @@ def step2_merge(cfg: PassConfig, dry: bool = False,
 # Step 3 – Run InttDoubletMap.C
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def step3_analysis(cfg: PassConfig, merged_file: str, dry: bool = False) -> None:
-    log("── Step 3: Run InttDoubletMap.C ─────────────────────────────", "STEP")
+def copy_and_patch_analysis_template(cfg: PassConfig, header_path: str,
+                                     out_dir: str) -> str:
+    """
+    Copy InttDoubletMap_template.C from cfg.analysis_macro_dir into out_dir,
+    rename it to InttDoubletMap_<pass_name>.C, and apply two patches:
 
-    macro = cfg.analysis_macro
+      1. Replace  #include "header_to_be_replace"
+         with     #include "/abs/path/to/<pass>_params.h"
+
+      2. Replace  void InttDoubletMap_template(
+         with     void InttDoubletMap_<pass_name>(
+
+    Returns the absolute path to the patched macro file.
+    """
+    import shutil
+
+    analysis_name = f"InttDoubletMap_{cfg.pass_name}"
+    template_src  = os.path.join(cfg.analysis_macro_dir,
+                                 "InttDoubletMap_template.C")
+    macro_dst     = os.path.join(out_dir, f"{analysis_name}.C")
+
+    if not os.path.isfile(template_src):
+        raise FileNotFoundError(
+            f"Analysis template not found: {template_src}\n"
+            f"Set cfg.analysis_macro_dir to the directory containing "
+            f"InttDoubletMap_template.C"
+        )
+
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    shutil.copy2(template_src, macro_dst)
+    log(f"Copied analysis template : {template_src}")
+    log(f"                       → {macro_dst}")
+
+    abs_header = os.path.abspath(header_path)
+    with open(macro_dst) as fh:
+        src = fh.read()
+
+    # Patch 1: #include placeholder → absolute header path
+    old_inc = f'#include "{_HEADER_PLACEHOLDER}"'
+    new_inc = f'#include "{abs_header}"'
+    if old_inc not in src:
+        log(
+            f"WARNING: placeholder '{old_inc}' not found in analysis template. "
+            f"Add the line  {old_inc}  to {template_src}",
+            "WARN",
+        )
+    else:
+        src = src.replace(old_inc, new_inc, 1)
+        log(f"Patched include   : '{_HEADER_PLACEHOLDER}' → {abs_header}")
+
+    # Patch 2: function name template → pass-specific name
+    old_func = "void InttDoubletMap_template("
+    new_func = f"void {analysis_name}("
+    if old_func in src:
+        src = src.replace(old_func, new_func, 1)
+        log(f"Patched func name : 'InttDoubletMap_template' → '{analysis_name}'")
+    else:
+        log(f"WARNING: function signature '{old_func}' not found in analysis template.", "WARN")
+
+    with open(macro_dst, "w") as fh:
+        fh.write(src)
+
+    return macro_dst
+
+
+def step3_analysis(cfg: PassConfig, merged_file: str, dry: bool = False) -> None:
+    log("── Step 3: Run InttDoubletMap analysis macro ────────────────", "STEP")
+
+    # The header was already written to generated_dir by step1_submit.
+    # We reuse it here so both macros always share the same params.
+    generated_dir  = os.path.join(cfg.output_directory, "generated_macro")
+    macro_name     = f"Run_PrepareHist_{cfg.pass_name}"
+    header_path    = os.path.join(generated_dir, f"{macro_name}_params.h")
+    analysis_name  = f"InttDoubletMap_{cfg.pass_name}"
+    analysis_dst   = os.path.join(generated_dir, f"{analysis_name}.C")
+
+    if not dry:
+        if not os.path.isfile(header_path):
+            log(
+                f"Header not found at {header_path}. "
+                f"Run Step 1 first to generate it.",
+                "ERR",
+            )
+            sys.exit(1)
+        copy_and_patch_analysis_template(cfg, header_path, generated_dir)
+    else:
+        log(f"[dry] Would copy+patch analysis template → {analysis_dst}")
+
     cmd = (
         f"source /opt/sphenix/core/bin/sphenix_setup.sh -n {cfg.sphenix_build} && "
-        f"root.exe -l -b -q '{macro}(\"{merged_file}\")'"
+        f"root.exe -l -b -q '{analysis_dst}(\"{merged_file}\")'"
     )
     rc = run(cmd, dry=dry)
     if rc != 0:
-        log(f"InttDoubletMap.C failed (exit {rc})", "ERR")
+        log(f"Analysis macro failed (exit {rc})", "ERR")
         sys.exit(rc)
 
     out_dir  = os.path.dirname(merged_file)
     out_base = "Output_" + os.path.splitext(os.path.basename(merged_file))[0] + ".root"
-    log(f"Analysis output: {os.path.join(out_dir, out_base)}")
+    log(f"Analysis output  : {os.path.join(out_dir, out_base)}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -24,7 +24,7 @@
 #include <TRandom.h> // note : for the offset
 #include <TRandom3.h> // note : for the offset
 
-
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/Constants.h"
 
 class AvgVtxXY {
     public: 
@@ -104,6 +104,7 @@ class AvgVtxXY {
         bool is_min_bias;
         float MBD_centrality;
         bool InttBco_IsToBeRemoved;
+        ULong_t GL1Packet_BCO;
 
         int NClus;
         std::vector<float> *ClusX;

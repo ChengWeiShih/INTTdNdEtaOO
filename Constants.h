@@ -38,6 +38,9 @@ namespace Constants{
     extern double Zmin;
     extern double Zmax;
 
+    extern std::string is_min_bias_name;
+    extern std::string MBD_centrality_name;
+
     // note : almost no change
     extern double EtaEdge_min;
     extern double EtaEdge_max;

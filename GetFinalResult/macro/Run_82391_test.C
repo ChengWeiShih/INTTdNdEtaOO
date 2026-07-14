@@ -17,7 +17,7 @@ int Run_82391_test(int condor_index)
 
     std::string output_file_name_suffix = "";
 
-    std::string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest/FinalResult_15cm_Pol2BkgFit_DeltaPhi0p15";
+    std::string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/DoubletCount_test/OldMethod/baseline/completed";
 
     GetFinalResult * GFR = new GetFinalResult(
         runnumber,

@@ -7,6 +7,9 @@ namespace Constants{
     // note : as of Feb 12, 2025, centrality bin: 1-3, 4-6, 7-10, 11-15, and so forth.
     // std::vector<double> centrality_edges    = {1, 4, 7, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71, 76, 81, 86, 91, 96, 100};
 
+    std::string is_min_bias_name = "is_min_bias_private_MinDeposit";
+    std::string MBD_centrality_name = "MBD_centrality_private";
+
     // note : as of Feb 12, 2025, centrality bin: 1-5, 6-10, 11-15, and so forth
     std::vector<double> centrality_edges = {1, 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71, 76, 81, 86, 91, 96, 100};
      

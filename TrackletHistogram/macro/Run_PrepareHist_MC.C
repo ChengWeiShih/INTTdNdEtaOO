@@ -17,21 +17,21 @@ TH2D * GetGoodColMap (std::string ColMulMask_map_dir_in, std::string ColMulMask_
 }
 
 void Run_PrepareHist_MC(
-  int process_id = 0,
-  int run_num = 54280,
+  int process_id = 9,
+  int run_num = -1,
   int nevents = -1,
-  string input_directory = "/sphenix/user/ChengWei/INTT/INTT/general_codes/CWShih/INTTBcoResolution/macro",
-  string input_filename = "file_list_54280_intt.txt",
-  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280/completed/BCO_check",
+  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/EvtVtxZ/completed",
+  string input_filename = "MC_EvtVtxZProtoTracklet_FieldOn_VtxZReco_00009.root",
+  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/DoubletCount_test/OldMethod",
   
   // todo : modify here
   std::string output_file_name_suffix = "",
   // std::pair<double, double> vertexXYIncm = {-0.0218978, 0.223183}, // note : in cm // note : HIJING
   // std::pair<double, double> vertexXYIncm = {-0.0216964, 0.223331}, // note : in cm // note : HIJING + strangeness
-  std::pair<double, double> vertexXYIncm = {-0.0059375, -0.0025}, // note : in cm // note : AMPT
+  std::pair<double, double> vertexXYIncm = {-0.05469,0.13906}, // note : in cm // note : AMPT
   // std::pair<double, double> vertexXYIncm = {-0.021907, 0.223293}, // note : in cm // note : EPOS
   
-  std::string zvtx_weight_file_index = "_001", // todo switch between _002 and _001
+  std::string zvtx_weight_file_index = "", // todo switch between _002 and _001
 
 
   std::pair<bool, TH1D*> vtxZReweight = {true, nullptr},
@@ -42,16 +42,16 @@ void Run_PrepareHist_MC(
   bool HaveGeoOffsetTag = false,
   std::pair<bool, int> SetRandomHits = {false, 0},
   bool RandInttZ = false,
-  bool ColMulMask = true,
+  bool ColMulMask = false,
 
   std::string ColMulMask_map_mother_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest/ColumnCheck"
 )
 {
   // todo : modify here
   // std::string vtxZReWeighting_input_directory = Form("/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/Sim_AMPT_MDC2_ana472_20250310/Run7/EvtVtxZ/completed/VtxZDist/completed/vtxZ_comp_WithVtxZQA%s/INTTvtxZReWeight.root",zvtx_weight_file_index.c_str());
-  std::string vtxZReWeighting_input_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest/VtxZDist/completed/vtxZ_comp_NoVtxZQA/INTTvtxZReWeight.root");
+  std::string vtxZReWeighting_input_directory = Form("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/VtxZDist/completed/vtxZ_comp_NoVtxZQA/INTTvtxZReWeight.root");
   // std::string map_name = "HIJING_noZWeight_WithVtxZQA_Inclusive70";
-  std::string map_name = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight20";
+  std::string map_name = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight";
 
   std::cout<<"vtxZReWeighting_input_directory: "<<vtxZReWeighting_input_directory<<std::endl;
 

@@ -30,6 +30,7 @@ class InttDoubletMap : public ClusHistogram{
             std::pair<bool, std::pair<int,int>> isMBDChargeCut_in,
             std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in,
 
+            std::pair<bool, TH1D*> IsTrigEffiWeight_in,
             std::pair<bool, TH1D*> vtxZReweight_in,
             bool INTT_vtxZ_QA_in,
             std::pair<double, double> VtxZRange_in,
@@ -60,6 +61,7 @@ class InttDoubletMap : public ClusHistogram{
         TH1D * h1D_BunchNumber;
         TH1D * h1D_MBDChargeSum;
         TH1D * h1D_ClusEtaInttZ;
+        TH1D * h1D_centrality;
 
         bool isTrigger = false;
         bool isStreaming = false;
@@ -75,6 +77,7 @@ class InttDoubletMap : public ClusHistogram{
         std::pair<double, double> VtxZRange;
         double DeltaPhiCut;
         std::pair<int, int> CentralityRange = {std::nan(""), std::nan("")};
+        std::pair<bool, TH1D*> IsTrigEffiWeight;
 
         // note : ----------------- for the analysis -----------------
         std::vector<pair_str> evt_TrackletPair_vec;
@@ -83,7 +86,7 @@ class InttDoubletMap : public ClusHistogram{
         std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>> outer_clu_phi_map;
 
         void GetTrackletPair(std::vector<pair_str> &input_TrackletPair_vec, bool isRotated);
-        void FillPairs(std::vector<pair_str> input_TrackletPair_vec, bool isRotated, int Mbin_in, int vtxz_bin_in, double vtxZ_weight_in, int eID_in);
+        void FillPairs(std::vector<pair_str> input_TrackletPair_vec, bool isRotated, double vtxZ_weight_in, double TrigEffiCorrWeight_in, int eID_in);
 
         std::pair<double,double> Get_possible_zvtx(double rvtx, std::vector<double> p0, std::vector<double> p1); // note : inner p0, outer p1, vector {r,z, zid}, -> {y,x}
         double get_delta_phi(double angle_1, double angle_2);
@@ -103,6 +106,7 @@ class InttDoubletMap : public ClusHistogram{
         // std::pair<bool, int> SetRandomHits_in = {false, 0};
         // bool RandInttZ_in = false;
 
+        TH1D * h1D_TrigEffiCorr; // note: which should just be h1D_centrality for the moment
 
         // note : ----------------- for constants -----------------
 

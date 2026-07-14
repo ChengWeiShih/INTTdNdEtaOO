@@ -118,8 +118,8 @@ void RestDist::PrepareInputFile()
 
     tree_in -> SetBranchStatus("*", 0);
 
-    tree_in -> SetBranchStatus("is_min_bias", 1);
-    tree_in -> SetBranchStatus("MBD_centrality", 1);
+    tree_in -> SetBranchStatus((Constants::is_min_bias_name).c_str(), 1);
+    tree_in -> SetBranchStatus((Constants::MBD_centrality_name).c_str(), 1);
     tree_in -> SetBranchStatus("MBD_z_vtx", 1);
     tree_in -> SetBranchStatus("MBD_charge_sum", 1);
     tree_in -> SetBranchStatus("MBD_charge_asymm", 1);
@@ -191,8 +191,8 @@ void RestDist::PrepareInputFile()
     ClusEta_TrueXYZ = 0;
     ClusPhi_TrueXY = 0;
 
-    tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
-    tree_in -> SetBranchAddress("MBD_centrality", &MBD_centrality);
+    tree_in -> SetBranchAddress((Constants::is_min_bias_name).c_str(), &is_min_bias);
+    tree_in -> SetBranchAddress((Constants::MBD_centrality_name).c_str(), &MBD_centrality);
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
     tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum);
     tree_in -> SetBranchAddress("MBD_charge_asymm", &MBD_charge_asymm);
@@ -606,7 +606,7 @@ void RestDist::PrepareEvent()
 
         // =======================================================================================================================================================
         // note : optional cut
-        if (Apply_cut && (MBD_z_vtx - INTTvtxZ < cut_vtxZDiff.first || MBD_z_vtx - INTTvtxZ > cut_vtxZDiff.second) ) {continue;}
+        // if (Apply_cut && (MBD_z_vtx - INTTvtxZ < cut_vtxZDiff.first || MBD_z_vtx - INTTvtxZ > cut_vtxZDiff.second) ) {continue;}
         if (Apply_cut && (TrapezoidalFitWidth < cut_TrapezoidalFitWidth.first || TrapezoidalFitWidth > cut_TrapezoidalFitWidth.second)){continue;}
         if (Apply_cut && (TrapezoidalFWHM < cut_TrapezoidalFWHM.first || TrapezoidalFWHM > cut_TrapezoidalFWHM.second)){continue;}
         if (Apply_cut && (INTTvtxZError < cut_INTTvtxZError.first || INTTvtxZError > cut_INTTvtxZError.second)){continue;}

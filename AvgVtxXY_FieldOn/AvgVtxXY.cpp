@@ -125,13 +125,13 @@ void AvgVtxXY::ReadRootFile()
 
     tree_in -> SetBranchStatus("*", 0);
     tree_in -> SetBranchStatus("MBD_z_vtx", 1);
-    // tree_in -> SetBranchStatus("is_min_bias", 1);
-    tree_in -> SetBranchStatus("is_min_bias_private_MinDeposit", 1); // todo: tentative
-    tree_in -> SetBranchStatus("MBD_centrality_privateFit", 1); // todo: tentative
+    tree_in -> SetBranchStatus((Constants::is_min_bias_name).c_str(), 1);
+    tree_in -> SetBranchStatus((Constants::MBD_centrality_name).c_str(), 1);
     // if (runnumber != -1) {
     //     tree_in -> SetBranchStatus("InttBco_IsToBeRemoved", 1);
     // }
 
+    tree_in -> SetBranchStatus("GL1Packet_BCO", 1);
     tree_in -> SetBranchStatus("NClus", 1);
     tree_in -> SetBranchStatus("ClusX", 1);
     tree_in -> SetBranchStatus("ClusY", 1);
@@ -148,13 +148,13 @@ void AvgVtxXY::ReadRootFile()
     ClusPhiSize = 0;
 
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
-    // tree_in -> SetBranchAddress("is_min_bias", &is_min_bias);
-    tree_in -> SetBranchAddress("is_min_bias_private_MinDeposit", &is_min_bias); // todo: tentative
-    tree_in -> SetBranchAddress("MBD_centrality_privateFit", &MBD_centrality); // todo: tentative
+    tree_in -> SetBranchAddress((Constants::is_min_bias_name).c_str(), &is_min_bias);
+    tree_in -> SetBranchAddress((Constants::MBD_centrality_name).c_str(), &MBD_centrality);
     // if (runnumber != -1) {
     //     tree_in -> SetBranchAddress("InttBco_IsToBeRemoved", &InttBco_IsToBeRemoved);
     // }
 
+    tree_in -> SetBranchAddress("GL1Packet_BCO", &GL1Packet_BCO);
     tree_in -> SetBranchAddress("NClus", &NClus);
     tree_in -> SetBranchAddress("ClusX", &ClusX);
     tree_in -> SetBranchAddress("ClusY", &ClusY);
@@ -386,6 +386,19 @@ void AvgVtxXY::PreparePairs()
         // if (runnumber != -1 && InttBco_IsToBeRemoved == 1) {continue;}
 
         if (NClus < INTTNClus_cut.first || NClus > INTTNClus_cut.second) {continue;}
+
+        if (runnumber != -1 && i < run_nEvents - 1){
+            ULong_t this_InttBcoFull = GL1Packet_BCO;
+
+            tree_in -> GetEntry(i+1);
+            ULong_t next_InttBcoFull = GL1Packet_BCO;
+            
+            long long out_InttBcoFullDiff_next = next_InttBcoFull - this_InttBcoFull;
+
+            tree_in -> GetEntry(i);
+
+            if (out_InttBcoFullDiff_next <= 80) {continue;}
+        }
 
         for (int j = 0; j < NClus; j++)
         {

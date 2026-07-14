@@ -98,7 +98,7 @@ class TrackletHistogramNew : public ClusHistogram{
         // note : for deta_phi
         double DeltaPhiEdge_min = -0.3; // note : rad ~ -4 degree
         double DeltaPhiEdge_max = 0.3;  // note : rad ~ 4 degree
-        int    nDeltaPhiBin = 200;
+        int    nDeltaPhiBin = 120;
 
         // note : for deta_eta
         double DeltaEtaEdge_min = -1.; // note : rad ~ -4 degree

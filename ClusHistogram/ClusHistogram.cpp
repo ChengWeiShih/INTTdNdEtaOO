@@ -155,8 +155,8 @@ void ClusHistogram::PrepareInputRootFile()
     PrimaryG4P_isChargeHadron = 0;
 
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
-    tree_in -> SetBranchAddress("is_min_bias_private_MinDeposit", &is_min_bias);
-    tree_in -> SetBranchAddress("MBD_centrality_private", &MBD_centrality);
+    tree_in -> SetBranchAddress((Constants::is_min_bias_name).c_str(), &is_min_bias);
+    tree_in -> SetBranchAddress((Constants::MBD_centrality_name).c_str(), &MBD_centrality);
     tree_in -> SetBranchAddress("MBD_south_charge_sum", &MBD_south_charge_sum);
     tree_in -> SetBranchAddress("MBD_north_charge_sum", &MBD_north_charge_sum);
     tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum);

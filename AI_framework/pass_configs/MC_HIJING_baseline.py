@@ -20,18 +20,22 @@ _cluster_phi_size = 40
 _delta_phi_cut    = 0.15
 _subfoldername    = "baseline"
 
+# note: need to check z-weight file and column mask file for AlignP
+# _pass_name        = "InttDoublet_HIJING_zweight_trigcorr_WithAlignP"
+_pass_name        = "InttDoublet_HIJING_zweight_trigcorr"
+
 _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex"
 
 cfg = PassConfig(
 
     # ── Pass identification ──────────────────────────────────────────────────
-    pass_name       = "MC_HIJING_baseline_test",
-    notes           = "Baseline, MC HIJING, test",
+    pass_name       = _pass_name,
+    notes           = "MC HIJING, zweight_trigcorr",
 
     # ── I/O ─────────────────────────────────────────────────────────────────
     input_directory  = _mother_directory + "/EvtVtxZ/completed",
     input_file_name  = "MC_EvtVtxZProtoTracklet_FieldOn_VtxZReco_{process:05d}.root",
-    output_directory = _mother_directory + "/InttDoublets_WithAlignP/%s_%d" % (_subfoldername, _centrality_bin),
+    output_directory = _mother_directory + "/" + _pass_name + "/%s_%d" % (_subfoldername, _centrality_bin),
 
     # ── Run metadata ─────────────────────────────────────────────────────────
     run_number  = -1, # use -1 for MC
@@ -50,10 +54,15 @@ cfg = PassConfig(
     isTriggerSel    = False,
     isMBDChargeCut  = (False, (0, 10000)),
     isBunchNumber_cut = (False, (-10, 1000)),
+
+    IsTrigEffiWeight = True,
+    TrigEffiWeight_dir = _mother_directory + "/VtxZDist/completed",
+    TrigEffiWeight_file = "MC_vtxZDist_NoVtxZQA_merged.root",
+    TrigEffiWeight_hist = "h1D_MBD_centrality",
     
     vtxZReweight    = True,        # plain bool: True = enable vtxZ reweighting
-    # zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
-    zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/AlignP_vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
+    zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
+    # zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/AlignP_vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
     zvtx_weight_file = "INTTvtxZReWeight.root",
     zvtx_weight_hist = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight",
     INTT_vtxZ_QA   = False,
@@ -67,8 +76,8 @@ cfg = PassConfig(
 
     # ── ColMulMask map (only needed when ColMulMask=True) ─────────────────────
     
-    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
-    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
+    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
+    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
     ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root",
 
     # ── HTCondor ─────────────────────────────────────────────────────────────

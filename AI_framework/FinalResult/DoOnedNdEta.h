@@ -20,7 +20,9 @@ class DoOnedNdEta {
 
             std::string MC_input_directory_in,
             std::string MC_correction_hist_name_in,
-            std::string MC_truth_dNdEta_hist_name_in = ""
+            std::string MC_truth_dNdEta_hist_name_in = "",
+            bool        IsSymmetrize_in = false,
+            bool        IsMirror_in     = false
         );
 
         TH1D *        GetdNdEtaHist() { return h1D_dNdEta; }
@@ -38,6 +40,8 @@ class DoOnedNdEta {
         std::string MC_input_directory;
         std::string MC_correction_hist_name;
         std::string MC_truth_dNdEta_hist_name;
+        bool        IsSymmetrize;
+        bool        IsMirror;
 
         // Division : -Output objects-----------------------------------------------------------
         TH1D *        h1D_dNdEta = nullptr;

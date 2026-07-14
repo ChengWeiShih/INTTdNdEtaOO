@@ -77,8 +77,12 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
     if (!h1D_BunchNumber)                     { std::cout << "No h1D_BunchNumber"<<std::endl;}
     if (!h1D_ClusEtaInttZ)                     { std::cout << "No h1D_ClusEtaInttZ"<<std::endl;}
 
-    double nEvents = h1D_nEvent->GetBinContent(1);
-    std::cout << "Number of events: " << nEvents << std::endl;
+    double nEvents_NoWeight              = h1D_nEvent->GetBinContent(1);
+    double nEvents_TrigWeight            = h1D_nEvent->GetBinContent(2);
+    double nEvents_TrigWeight_vtxZweight = h1D_nEvent->GetBinContent(3);
+    std::cout << "Number of events (no weight): " << nEvents_NoWeight << std::endl;
+    std::cout << "Number of events (w/ trigger effi corr weight): " << nEvents_TrigWeight << std::endl;
+    std::cout << "Number of events (w/ trigger effi corr weight and zvtx weight): " << nEvents_TrigWeight_vtxZweight << std::endl;
     std::cout << "h1D_GoodProtoTracklet_Eta NbinsX(): "<< h1D_GoodProtoTracklet_Eta->GetNbinsX() << std::endl;
 
     // =====================================================================
@@ -104,8 +108,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
         double binW = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinWidth(i);
         double val  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinContent(i);
         double err  = h1D_GoodProtoTracklet_Eta_Subtracted_normalized->GetBinError(i);
-        h1D_GoodProtoTracklet_Eta_Subtracted_normalized->SetBinContent(i, val / binW / nEvents);
-        h1D_GoodProtoTracklet_Eta_Subtracted_normalized->SetBinError(i, err / binW / nEvents);
+        h1D_GoodProtoTracklet_Eta_Subtracted_normalized->SetBinContent(i, val / binW / nEvents_TrigWeight_vtxZweight);
+        h1D_GoodProtoTracklet_Eta_Subtracted_normalized->SetBinError(i, err / binW / nEvents_TrigWeight_vtxZweight);
     }
 
     if (h1D_ClusEtaInttZ_normalized){
@@ -114,8 +118,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
             double val  = h1D_ClusEtaInttZ_normalized->GetBinContent(i);
             double err  = h1D_ClusEtaInttZ_normalized->GetBinError(i);
             
-            h1D_ClusEtaInttZ_normalized->SetBinContent(i, val / binW / nEvents);
-            h1D_ClusEtaInttZ_normalized->SetBinError(i, err / binW / nEvents);
+            h1D_ClusEtaInttZ_normalized->SetBinContent(i, val / binW / nEvents_TrigWeight_vtxZweight);
+            h1D_ClusEtaInttZ_normalized->SetBinError(i, err / binW / nEvents_TrigWeight_vtxZweight);
         }   
     }
 
@@ -186,8 +190,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
         double binW = h1D_DeltaPhi_IntegralEta_normalized->GetBinWidth(i);
         double val  = h1D_DeltaPhi_IntegralEta_normalized->GetBinContent(i);
         double err  = h1D_DeltaPhi_IntegralEta_normalized->GetBinError(i);
-        h1D_DeltaPhi_IntegralEta_normalized->SetBinContent(i, val / binW / nEvents);
-        h1D_DeltaPhi_IntegralEta_normalized->SetBinError(i, err / binW / nEvents);
+        h1D_DeltaPhi_IntegralEta_normalized->SetBinContent(i, val / binW / nEvents_TrigWeight_vtxZweight);
+        h1D_DeltaPhi_IntegralEta_normalized->SetBinError(i, err / binW / nEvents_TrigWeight_vtxZweight);
     }
 
     // =====================================================================
@@ -265,8 +269,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
             double binW = h1D_TruedNdEta_perEvt->GetBinWidth(i);
             double val  = h1D_TruedNdEta_perEvt->GetBinContent(i);
             double err  = h1D_TruedNdEta_perEvt->GetBinError(i);
-            h1D_TruedNdEta_perEvt->SetBinContent(i, val / binW / nEvents);
-            h1D_TruedNdEta_perEvt->SetBinError(i, err / binW / nEvents);
+            h1D_TruedNdEta_perEvt->SetBinContent(i, val / binW / nEvents_TrigWeight);
+            h1D_TruedNdEta_perEvt->SetBinError(i, err / binW / nEvents_TrigWeight);
         }
 
         if (h1D_TruedNdEta_perEvt){

@@ -20,19 +20,22 @@ _cluster_phi_size = 40
 _delta_phi_cut    = 0.15
 _subfoldername    = "baseline"
 
-# _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality"
-_mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_LoacalPos_PrivateCentrality"
+_pass_name        = "InttDoublet_zweight_trigcorr"
+
+#note: AlignP, need to check, the vertexXY, the column mask, 
+_mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality"
+# _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_LoacalPos_PrivateCentrality"
 
 cfg = PassConfig(
 
     # ── Pass identification ──────────────────────────────────────────────────
-    pass_name       = "data_82391_baseline_test",
-    notes           = "Baseline, run 82391, test",
+    pass_name       = _pass_name,
+    notes           = "Run 82391, zweight_trigcorr",
 
     # ── I/O ─────────────────────────────────────────────────────────────────
     input_directory  = _mother_directory + "/EvtVtxZ/completed",
     input_file_name  = "Data_EvtVtxZProtoTracklet_FieldOn_BcoFullDiff_VtxZReco_00082391_{process:05d}.root",
-    output_directory = _mother_directory + "/InttDoublets/%s_%d" % (_subfoldername, _centrality_bin),
+    output_directory = _mother_directory + "/" + _pass_name + "/%s_%d" % (_subfoldername, _centrality_bin),
 
     # ── Run metadata ─────────────────────────────────────────────────────────
     run_number  = 82391,
@@ -40,8 +43,8 @@ cfg = PassConfig(
 
     # ── InttDoubletMap parameters ────────────────────────────────────────────
     output_file_name_suffix = "",
-    # vertexXYIncm    = (-0.05156, 0.13594),   # beam-spot (x,y) in cm, survey only
-    vertexXYIncm    = (-0.04844, 0.11719),   # beam-spot (x,y) in cm, w/ alignment parameter
+    vertexXYIncm    = (-0.05156, 0.13594),   # beam-spot (x,y) in cm, survey only
+    # vertexXYIncm    = (-0.04844, 0.11719),   # beam-spot (x,y) in cm, w/ AlignP
     
     data_type       = 0,                    # 2 = streaming_data
     isUsedMBDz      = False,
@@ -52,6 +55,11 @@ cfg = PassConfig(
     isTriggerSel    = False,
     isMBDChargeCut  = (False, (0, 10000)),
     isBunchNumber_cut = (False, (-10, 1000)),
+
+    IsTrigEffiWeight = True,
+    TrigEffiWeight_dir = _mother_directory + "/VtxZDist/completed",
+    TrigEffiWeight_file = "Data_vtxZDist_NoVtxZQA_EvtBcoFullDiffCut80_00082391_merged.root",
+    TrigEffiWeight_hist = "h1D_MBD_centrality",
     
     vtxZReweight    = False,        # plain bool: True = enable vtxZ reweighting
     zvtx_weight_dir  = "",           # only needed when vtxZReweight=True
@@ -68,8 +76,8 @@ cfg = PassConfig(
 
     # ── ColMulMask map (only needed when ColMulMask=True) ─────────────────────
     
-    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
-    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
+    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
+    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
     ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root",
 
     # ── HTCondor ─────────────────────────────────────────────────────────────

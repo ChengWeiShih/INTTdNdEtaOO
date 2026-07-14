@@ -1,0 +1,279 @@
+#include "../InttDoubletMap.h"
+
+R__LOAD_LIBRARY(../libInttDoubletMap.so)
+
+TH2D * GetGoodColMap(std::string ColMulMask_map_dir_in, std::string ColMulMask_map_file_in, std::string map_name_in)
+{
+  TFile * f = TFile::Open(Form("%s/%s", ColMulMask_map_dir_in.c_str(), ColMulMask_map_file_in.c_str()));
+  TH2D * h = (TH2D*)f->Get(map_name_in.c_str());
+  return h;
+}
+
+TH1D * GetTH1D(std::string h1D_input_directory, std::string h1D_filename, std::string h1D_name)
+{
+  TFile * f1 = TFile::Open(Form("%s/%s", h1D_input_directory.c_str(), h1D_filename.c_str()));
+  TH1D * h1 = (TH1D*)f1->Get(h1D_name.c_str());
+  return h1;
+}
+
+int Run_PrepareHist_template(
+  int process_id = 8,
+  int run_num = -1,
+  int nevents = -1,
+  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/EvtVtxZ/completed",
+  string input_filename = "MC_EvtVtxZProtoTracklet_FieldOn_VtxZReco_00008.root",
+  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/DoubletCount_test/NewMethod"
+  
+  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Dec042024/completed/Run3/EvtVtxZ/ColumnCheck/completed/MulMap/completed",
+  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin50_VtxZ-30to30cm_ClusQAAdc35PhiSize500_00054280.root"
+
+  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Dec042024/completed/Run3/EvtVtxZ/ColumnCheck_NoClusQA/completed/MulMap/completed",
+  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin50_VtxZ-30to30cm_00054280.root"
+  
+  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Jan172025/Run4/EvtVtxZ/ColumnCheck_noPhiCut/completed/MulMap/completed",
+  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc35PhiSize350_00054280.root"
+)
+{
+  
+  // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+
+  std::string ColMulMask_map_mother_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed";
+  std::string ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root");
+  // std::string ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00082391.root", isClusQA_in.second.first, isClusQA_in.second.second);
+
+  std::string zvtx_weight_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/VtxZDist/completed/vtxZ_comp_NoVtxZQA";
+  std::string zvtx_weight_file = "INTTvtxZReWeight.root";
+  std::string zvtx_weight_hist = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight";
+
+  // todo : modify here
+  std::string output_file_name_suffix = "";
+  std::pair<double, double> vertexXYIncm = {-0.05469,0.13906};
+
+  int data_type_in = 0; // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+  bool isUsedMBDz_in = false;
+
+  bool BcoFullDiffCut_in = true;
+  int CentralityBin_in = 0;
+  bool isMinBiasCut_in = true;
+  bool isTriggerSel_in = false;
+  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = {false, {0,10000}};
+  std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = {false, {-10, 1000}};
+
+  // std::pair<bool, TH1D*> vtxZReweight_in = {false, nullptr};
+  bool vtxZReweight_in = true;
+  bool INTT_vtxZ_QA_in = false;
+  std::pair<double, double> VtxZRange_in = {-10,10};
+
+  bool ColMulMask_in = false;
+  std::pair<bool, std::pair<double, double>> isClusQA_in = {true, {15, 40}}; // note : {adc, phi size}
+  double DeltaPhiCut_in = 0.15;
+
+  bool HaveGeoOffsetTag_in = false;
+
+  // Division: ------------------------------------------------------------------------
+  std::pair<bool, TH1D*> vtxZReweight_final = {vtxZReweight_in, nullptr};
+
+  if (vtxZReweight_final.first){
+    vtxZReweight_final.second = GetTH1D(
+      zvtx_weight_dir, zvtx_weight_file, zvtx_weight_hist
+    );
+  }
+
+  if (vtxZReweight_final.first && vtxZReweight_final.second == nullptr){
+    std::cout<<"no vtxZReweight map, kill the job"<<std::endl;
+    return 666;
+  }
+  
+
+  std::string final_output_directory = output_directory;
+  system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
+
+
+  InttDoubletMap * TLHN = new InttDoubletMap(
+    process_id,
+    run_num,
+    nevents,
+    input_directory,
+    input_filename,
+    final_output_directory,
+
+    output_file_name_suffix,
+    vertexXYIncm,
+
+    data_type_in,
+    isUsedMBDz_in,
+
+    BcoFullDiffCut_in,
+    CentralityBin_in,
+    isMinBiasCut_in,
+    isTriggerSel_in,
+    isMBDChargeCut_in,
+    isBunchNumber_cut_in,
+
+    vtxZReweight_final,
+    INTT_vtxZ_QA_in,
+    VtxZRange_in,
+
+    ColMulMask_in,
+    isClusQA_in,
+    DeltaPhiCut_in,
+
+    HaveGeoOffsetTag_in
+  );
+
+  if (ColMulMask_in){
+    TLHN -> SetGoodColMap(
+      GetGoodColMap(ColMulMask_map_mother_dir, ColMulMask_map_file, TLHN->GetGoodColMapName())
+    );
+  }
+
+  string final_output_file_name = TLHN->GetOutputFileName();
+  cout<<"final_output_file_name: "<<final_output_file_name<<endl;
+  system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name.c_str(), final_output_directory.c_str(), final_output_file_name.c_str()));  
+
+  TLHN -> MainProcess();
+  TLHN -> EndRun();
+
+  system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name.c_str(), final_output_directory.c_str()));
+
+  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // // note : noAdcCut
+  // final_output_directory = output_directory + "/noAdcCut";
+  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
+
+  // isClusQA = {true, {0,40}}; // note : {adc, phi size}
+
+  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/noAdcCut/completed/MulMap/completed";
+  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
+
+  // TrackletHistogramNew * TLHN1 = new TrackletHistogramNew(
+  //   process_id,
+  //   run_num,
+  //   nevents,
+  //   input_directory,
+  //   input_filename,
+  //   final_output_directory,
+
+  //   output_file_name_suffix,
+  //   vertexXYIncm,
+
+  //   vtxZReweight,
+  //   BcoFullDiffCut,
+  //   INTT_vtxZ_QA,
+  //   isClusQA, // note : {adc, phi size}
+  //   HaveGeoOffsetTag,
+  //   SetRandomHits,
+  //   RandInttZ,
+  //   ColMulMask
+  // );
+
+  // if (ColMulMask){
+  //   TLHN1 -> SetGoodColMap(
+  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN1->GetGoodColMapName())
+  //   );
+  // }
+
+  // string final_output_file_name1 = TLHN1->GetOutputFileName();
+  // cout<<"final_output_file_name1: "<<final_output_file_name1<<endl;
+  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name1.c_str(), final_output_directory.c_str(), final_output_file_name1.c_str()));  
+
+  // TLHN1 -> MainProcess();
+  // TLHN1 -> EndRun();
+
+  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name1.c_str(), final_output_directory.c_str()));
+
+  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // // note : 50AdcCut
+  // final_output_directory = output_directory + "/50AdcCut";
+  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
+
+  // isClusQA = {true, {50,40}}; // note : {adc, phi size}
+
+  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/50AdcCut/completed/MulMap/completed";
+  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
+
+  // TrackletHistogramNew * TLHN2 = new TrackletHistogramNew(
+  //   process_id,
+  //   run_num,
+  //   nevents,
+  //   input_directory,
+  //   input_filename,
+  //   final_output_directory,
+
+  //   output_file_name_suffix,
+  //   vertexXYIncm,
+
+  //   vtxZReweight,
+  //   BcoFullDiffCut,
+  //   INTT_vtxZ_QA,
+  //   isClusQA, // note : {adc, phi size}
+  //   HaveGeoOffsetTag,
+  //   SetRandomHits,
+  //   RandInttZ,
+  //   ColMulMask
+  // );
+
+  // if (ColMulMask){
+  //   TLHN2 -> SetGoodColMap(
+  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN2->GetGoodColMapName())
+  //   );
+  // }
+
+  // string final_output_file_name2 = TLHN2->GetOutputFileName();
+  // cout<<"final_output_file_name2: "<<final_output_file_name2<<endl;
+  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name2.c_str(), final_output_directory.c_str(), final_output_file_name2.c_str()));  
+
+  // TLHN2 -> MainProcess();
+  // TLHN2 -> EndRun();
+
+  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name2.c_str(), final_output_directory.c_str()));
+
+  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // // note : noPhiCut
+  // final_output_directory = output_directory + "/noPhiCut";
+  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
+
+  // isClusQA = {true, {35,350}}; // note : {adc, phi size}
+
+  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/noPhiCut/completed/MulMap/completed";
+  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
+
+  // TrackletHistogramNew * TLHN3 = new TrackletHistogramNew(
+  //   process_id,
+  //   run_num,
+  //   nevents,
+  //   input_directory,
+  //   input_filename,
+  //   final_output_directory,
+
+  //   output_file_name_suffix,
+  //   vertexXYIncm,
+
+  //   vtxZReweight,
+  //   BcoFullDiffCut,
+  //   INTT_vtxZ_QA,
+  //   isClusQA, // note : {adc, phi size}
+  //   HaveGeoOffsetTag,
+  //   SetRandomHits,
+  //   RandInttZ,
+  //   ColMulMask
+  // );
+
+  // if (ColMulMask){
+  //   TLHN3 -> SetGoodColMap(
+  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN3->GetGoodColMapName())
+  //   );
+  // }
+
+  // string final_output_file_name3 = TLHN3->GetOutputFileName();
+  // cout<<"final_output_file_name3: "<<final_output_file_name3<<endl;
+  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name3.c_str(), final_output_directory.c_str(), final_output_file_name3.c_str()));  
+
+  // TLHN3 -> MainProcess();
+  // TLHN3 -> EndRun();
+
+  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name3.c_str(), final_output_directory.c_str()));
+
+  return 888;
+}

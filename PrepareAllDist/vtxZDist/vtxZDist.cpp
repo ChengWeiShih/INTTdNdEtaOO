@@ -85,8 +85,8 @@ void vtxZDist::PrepareInputFile()
 
     tree_in -> SetBranchStatus("*", 0);
 
-    tree_in -> SetBranchStatus("is_min_bias_private_MinDeposit", 1); // todo: tentative
-    tree_in -> SetBranchStatus("MBD_centrality_private", 1); // todo: tentative
+    tree_in -> SetBranchStatus((Constants::is_min_bias_name).c_str(), 1);
+    tree_in -> SetBranchStatus((Constants::MBD_centrality_name).c_str(), 1);
     tree_in -> SetBranchStatus("MBD_z_vtx", 1);
     tree_in -> SetBranchStatus("MBD_charge_sum", 1);
 
@@ -115,8 +115,8 @@ void vtxZDist::PrepareInputFile()
     if (branch_map.find("TruthPV_trig_z") != branch_map.end()) {tree_in -> SetBranchStatus("TruthPV_trig_z", 1);}
 
     // Division : ---SetBranchAddress-----------------------------------------------------------------------------------------------
-    tree_in -> SetBranchAddress("is_min_bias_private_MinDeposit", &is_min_bias); // todo: tentative
-    tree_in -> SetBranchAddress("MBD_centrality_private", &MBD_centrality); // todo: tentative
+    tree_in -> SetBranchAddress((Constants::is_min_bias_name).c_str(), &is_min_bias);
+    tree_in -> SetBranchAddress((Constants::MBD_centrality_name).c_str(), &MBD_centrality);
     tree_in -> SetBranchAddress("MBD_z_vtx", &MBD_z_vtx);
     tree_in -> SetBranchAddress("MBD_charge_sum", &MBD_charge_sum);
 

@@ -1,6 +1,7 @@
-#include "../InttDoubletMap.h"
+#include "header_to_be_replace"
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/InttDoubletMap/InttDoubletMap.h"
 
-R__LOAD_LIBRARY(../libInttDoubletMap.so)
+R__LOAD_LIBRARY(/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/InttDoubletMap/libInttDoubletMap.so)
 
 TH2D * GetGoodColMap(std::string ColMulMask_map_dir_in, std::string ColMulMask_map_file_in, std::string map_name_in)
 {
@@ -17,62 +18,112 @@ TH1D * GetTH1D(std::string h1D_input_directory, std::string h1D_filename, std::s
 }
 
 int Run_PrepareHist_template(
-  int process_id = 0,
-  int run_num = 82405,
+  int process_id = 8,
+  int run_num = -1,
   int nevents = -1,
-  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82405",
-  string input_filename = "82405_converter.root",
-  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82405/InttDoublets"
-  
-  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Dec042024/completed/Run3/EvtVtxZ/ColumnCheck/completed/MulMap/completed",
-  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin50_VtxZ-30to30cm_ClusQAAdc35PhiSize500_00054280.root"
-
-  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Dec042024/completed/Run3/EvtVtxZ/ColumnCheck_NoClusQA/completed/MulMap/completed",
-  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin50_VtxZ-30to30cm_00054280.root"
-  
-  // std::string ColMulMask_map_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Jan172025/Run4/EvtVtxZ/ColumnCheck_noPhiCut/completed/MulMap/completed",
-  // std::string ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc35PhiSize350_00054280.root"
+  string input_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/EvtVtxZ/completed",
+  string input_filename = "MC_EvtVtxZProtoTracklet_FieldOn_VtxZReco_00008.root",
+  string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/DoubletCount_test/NewMethod"
 )
 {
   
   // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
   
 
-  std::string ColMulMask_map_mother_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed";
-  std::string ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root");
-  // std::string ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00082391.root", isClusQA_in.second.first, isClusQA_in.second.second);
+  std::string ColMulMask_map_mother_dir = PassParams::ColMulMask_map_dir;
+  std::string ColMulMask_map_file = PassParams::ColMulMask_map_file;
 
-  std::string zvtx_weight_dir = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/VtxZDist/completed/AlignP_vtxZ_comp_NoVtxZQA";
-  std::string zvtx_weight_file = "INTTvtxZReWeight.root";
-  std::string zvtx_weight_hist = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight";
+  std::string zvtx_weight_dir  = PassParams::zvtx_weight_dir;
+  std::string zvtx_weight_file = PassParams::zvtx_weight_file;
+  std::string zvtx_weight_hist = PassParams::zvtx_weight_hist;
+
+  std::string TrigEffiWeight_dir = PassParams::TrigEffiWeight_dir;
+  std::string TrigEffiWeight_file = PassParams::TrigEffiWeight_file;
+  std::string TrigEffiWeight_hist = PassParams::TrigEffiWeight_hist;
 
   // todo : modify here
-  std::string output_file_name_suffix = "";
-  std::pair<double, double> vertexXYIncm = {-0.05156,0.13594};
+  std::string output_file_name_suffix = PassParams::output_file_name_suffix;
+  std::pair<double, double> vertexXYIncm = PassParams::vertexXYIncm;
 
-  int data_type_in = 0; // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
-  bool isUsedMBDz_in = false;
+  int data_type_in = PassParams::data_type; // note : 0 pure_trigger, 1 streaming_trigger, 2 streaming_data
+  bool isUsedMBDz_in = PassParams::isUsedMBDz;
 
-  bool BcoFullDiffCut_in = true;
-  int CentralityBin_in = 0;
-  bool isMinBiasCut_in = true;
-  bool isTriggerSel_in = false;
-  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = {false, {0,10000}};
-  std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = {false, {-10, 1000}};
+  bool BcoFullDiffCut_in = PassParams::BcoFullDiffCut;
+  int CentralityBin_in = PassParams::CentralityBin;
+  bool isMinBiasCut_in = PassParams::isMinBiasCut;
+  bool isTriggerSel_in = PassParams::isTriggerSel;
+  std::pair<bool, std::pair<int,int>> isMBDChargeCut_in = PassParams::isMBDChargeCut;
+  std::pair<bool, std::pair<int,int>> isBunchNumber_cut_in = PassParams::isBunchNumber_cut;
 
   // std::pair<bool, TH1D*> vtxZReweight_in = {false, nullptr};
-  bool vtxZReweight_in = false;
-  bool INTT_vtxZ_QA_in = false;
-  std::pair<double, double> VtxZRange_in = {-10,10};
+  bool IsTrigEffiWeight_in = PassParams::IsTrigEffiWeight;
+  bool vtxZReweight_in = PassParams::vtxZReweight;
+  bool INTT_vtxZ_QA_in = PassParams::INTT_vtxZ_QA;
+  std::pair<double, double> VtxZRange_in = PassParams::VtxZRange;
 
-  bool ColMulMask_in = true;
-  std::pair<bool, std::pair<double, double>> isClusQA_in = {true, {30, 40}}; // note : {adc, phi size}
-  double DeltaPhiCut_in = 0.15;
+  bool ColMulMask_in = PassParams::ColMulMask;
+  std::pair<bool, std::pair<double, double>> isClusQA_in = PassParams::isClusQA; // note : {adc, phi size}
+  double DeltaPhiCut_in = PassParams::DeltaPhiCut;
 
-  bool HaveGeoOffsetTag_in = false;
+  bool HaveGeoOffsetTag_in = PassParams::HaveGeoOffsetTag;
 
-  // Division: ------------------------------------------------------------------------
+  // Division: ── PassParams confirmation print ──────────────────────────────
+  std::cout << std::endl;
+  std::cout << "============================================================" << std::endl;
+  std::cout << "  PassParams confirmation in Run_PrepareHist_template.C" << std::endl;
+  std::cout << "============================================================" << std::endl;
+
+  std::cout << "  -- per-job arguments --" << std::endl;
+  std::cout << "  process_id       : " << process_id       << std::endl;
+  std::cout << "  run_num          : " << run_num          << std::endl;
+  std::cout << "  nevents          : " << nevents          << std::endl;
+  std::cout << "  input_directory  : " << input_directory  << std::endl;
+  std::cout << "  input_filename   : " << input_filename   << std::endl;
+  std::cout << "  output_directory : " << output_directory << std::endl;
+
+  std::cout << "  -- trigger correction reweight --" << std::endl;
+  std::cout << "IsTrigEffiWeight_in: "<< IsTrigEffiWeight_in <<std::endl;
+  std::cout << "TrigEffiWeight_dir: "<< TrigEffiWeight_dir <<std::endl;
+  std::cout << "TrigEffiWeight_file: "<< TrigEffiWeight_file <<std::endl;
+  std::cout << "TrigEffiWeight_hist: "<< TrigEffiWeight_hist <<std::endl;
+
+  std::cout << "  -- vtxZ reweight --" << std::endl;
+  std::cout << "  vtxZReweight     : " << vtxZReweight_in  << std::endl;
+  std::cout << "  zvtx_weight_dir  : " << zvtx_weight_dir  << std::endl;
+  std::cout << "  zvtx_weight_file : " << zvtx_weight_file << std::endl;
+  std::cout << "  zvtx_weight_hist : " << zvtx_weight_hist << std::endl;
+
+  std::cout << "  -- ColMulMask map --" << std::endl;
+  std::cout << "  ColMulMask_map_dir  : " << ColMulMask_map_mother_dir << std::endl;
+  std::cout << "  ColMulMask_map_file : " << ColMulMask_map_file       << std::endl;
+
+  std::cout << "  -- InttDoubletMap constructor parameters --" << std::endl;
+  std::cout << "  output_file_name_suffix : " << output_file_name_suffix          << std::endl;
+  std::cout << "  vertexXYIncm     : (" << vertexXYIncm.first << ", " << vertexXYIncm.second << ")" << std::endl;
+  std::cout << "  data_type        : " << data_type_in    << "  (0=pure_trig, 1=stream_trig, 2=stream_data)" << std::endl;
+  std::cout << "  isUsedMBDz       : " << isUsedMBDz_in   << std::endl;
+  std::cout << "  BcoFullDiffCut   : " << BcoFullDiffCut_in  << std::endl;
+  std::cout << "  CentralityBin    : " << CentralityBin_in   << std::endl;
+  std::cout << "  isMinBiasCut     : " << isMinBiasCut_in    << std::endl;
+  std::cout << "  isTriggerSel     : " << isTriggerSel_in    << std::endl;
+  std::cout << "  isMBDChargeCut   : (" << isMBDChargeCut_in.first
+            << ", (" << isMBDChargeCut_in.second.first << ", " << isMBDChargeCut_in.second.second << "))" << std::endl;
+  std::cout << "  isBunchNumber_cut: (" << isBunchNumber_cut_in.first
+            << ", (" << isBunchNumber_cut_in.second.first << ", " << isBunchNumber_cut_in.second.second << "))" << std::endl;
+  std::cout << "  INTT_vtxZ_QA     : " << INTT_vtxZ_QA_in << std::endl;
+  std::cout << "  VtxZRange        : (" << VtxZRange_in.first << ", " << VtxZRange_in.second << ")" << std::endl;
+  std::cout << "  ColMulMask       : " << ColMulMask_in   << std::endl;
+  std::cout << "  isClusQA         : (" << isClusQA_in.first
+            << ", (" << isClusQA_in.second.first << ", " << isClusQA_in.second.second << "))"
+            << "  (adc, phi_size)" << std::endl;
+  std::cout << "  DeltaPhiCut      : " << DeltaPhiCut_in  << std::endl;
+  std::cout << "  HaveGeoOffsetTag : " << HaveGeoOffsetTag_in << std::endl;
+  std::cout << "============================================================" << std::endl;
+  std::cout << std::endl;
+
+  // Division: ── vtxZReweight construction ───────────────────────────────────
   std::pair<bool, TH1D*> vtxZReweight_final = {vtxZReweight_in, nullptr};
+  std::pair<bool, TH1D*> TrigCorrWeight_final = {IsTrigEffiWeight_in, nullptr};
 
   if (vtxZReweight_final.first){
     vtxZReweight_final.second = GetTH1D(
@@ -82,6 +133,17 @@ int Run_PrepareHist_template(
 
   if (vtxZReweight_final.first && vtxZReweight_final.second == nullptr){
     std::cout<<"no vtxZReweight map, kill the job"<<std::endl;
+    return 666;
+  }
+
+  if (TrigCorrWeight_final.first){
+    TrigCorrWeight_final.second = GetTH1D(
+      TrigEffiWeight_dir, TrigEffiWeight_file, TrigEffiWeight_hist
+    );
+  }
+
+  if (TrigCorrWeight_final.first && TrigCorrWeight_final.second == nullptr){
+    std::cout<<"no TrigCorrWeight map, kill the job"<<std::endl;
     return 666;
   }
   
@@ -111,6 +173,7 @@ int Run_PrepareHist_template(
     isMBDChargeCut_in,
     isBunchNumber_cut_in,
 
+    TrigCorrWeight_final,
     vtxZReweight_final,
     INTT_vtxZ_QA_in,
     VtxZRange_in,
@@ -137,143 +200,15 @@ int Run_PrepareHist_template(
 
   system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name.c_str(), final_output_directory.c_str()));
 
-  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // // note : noAdcCut
-  // final_output_directory = output_directory + "/noAdcCut";
-  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
-
-  // isClusQA = {true, {0,40}}; // note : {adc, phi size}
-
-  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/noAdcCut/completed/MulMap/completed";
-  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
-
-  // TrackletHistogramNew * TLHN1 = new TrackletHistogramNew(
-  //   process_id,
-  //   run_num,
-  //   nevents,
-  //   input_directory,
-  //   input_filename,
-  //   final_output_directory,
-
-  //   output_file_name_suffix,
-  //   vertexXYIncm,
-
-  //   vtxZReweight,
-  //   BcoFullDiffCut,
-  //   INTT_vtxZ_QA,
-  //   isClusQA, // note : {adc, phi size}
-  //   HaveGeoOffsetTag,
-  //   SetRandomHits,
-  //   RandInttZ,
-  //   ColMulMask
-  // );
-
-  // if (ColMulMask){
-  //   TLHN1 -> SetGoodColMap(
-  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN1->GetGoodColMapName())
-  //   );
-  // }
-
-  // string final_output_file_name1 = TLHN1->GetOutputFileName();
-  // cout<<"final_output_file_name1: "<<final_output_file_name1<<endl;
-  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name1.c_str(), final_output_directory.c_str(), final_output_file_name1.c_str()));  
-
-  // TLHN1 -> MainProcess();
-  // TLHN1 -> EndRun();
-
-  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name1.c_str(), final_output_directory.c_str()));
-
-  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // // note : 50AdcCut
-  // final_output_directory = output_directory + "/50AdcCut";
-  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
-
-  // isClusQA = {true, {50,40}}; // note : {adc, phi size}
-
-  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/50AdcCut/completed/MulMap/completed";
-  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
-
-  // TrackletHistogramNew * TLHN2 = new TrackletHistogramNew(
-  //   process_id,
-  //   run_num,
-  //   nevents,
-  //   input_directory,
-  //   input_filename,
-  //   final_output_directory,
-
-  //   output_file_name_suffix,
-  //   vertexXYIncm,
-
-  //   vtxZReweight,
-  //   BcoFullDiffCut,
-  //   INTT_vtxZ_QA,
-  //   isClusQA, // note : {adc, phi size}
-  //   HaveGeoOffsetTag,
-  //   SetRandomHits,
-  //   RandInttZ,
-  //   ColMulMask
-  // );
-
-  // if (ColMulMask){
-  //   TLHN2 -> SetGoodColMap(
-  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN2->GetGoodColMapName())
-  //   );
-  // }
-
-  // string final_output_file_name2 = TLHN2->GetOutputFileName();
-  // cout<<"final_output_file_name2: "<<final_output_file_name2<<endl;
-  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name2.c_str(), final_output_directory.c_str(), final_output_file_name2.c_str()));  
-
-  // TLHN2 -> MainProcess();
-  // TLHN2 -> EndRun();
-
-  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name2.c_str(), final_output_directory.c_str()));
-
-  // // Division : -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  // // note : noPhiCut
-  // final_output_directory = output_directory + "/noPhiCut";
-  // system(Form("mkdir -p %s/completed", final_output_directory.c_str()));
-
-  // isClusQA = {true, {35,350}}; // note : {adc, phi size}
-
-  // ColMulMask_map_dir = ColMulMask_map_mother_dir + "/noPhiCut/completed/MulMap/completed";
-  // ColMulMask_map_file = Form("MulMap_BcoFullDiffCut_Mbin70_VtxZ-30to30cm_ClusQAAdc%.0fPhiSize%.0f_00054280.root", isClusQA.second.first, isClusQA.second.second);
-
-  // TrackletHistogramNew * TLHN3 = new TrackletHistogramNew(
-  //   process_id,
-  //   run_num,
-  //   nevents,
-  //   input_directory,
-  //   input_filename,
-  //   final_output_directory,
-
-  //   output_file_name_suffix,
-  //   vertexXYIncm,
-
-  //   vtxZReweight,
-  //   BcoFullDiffCut,
-  //   INTT_vtxZ_QA,
-  //   isClusQA, // note : {adc, phi size}
-  //   HaveGeoOffsetTag,
-  //   SetRandomHits,
-  //   RandInttZ,
-  //   ColMulMask
-  // );
-
-  // if (ColMulMask){
-  //   TLHN3 -> SetGoodColMap(
-  //     GetGoodColMap(ColMulMask_map_dir, ColMulMask_map_file, TLHN3->GetGoodColMapName())
-  //   );
-  // }
-
-  // string final_output_file_name3 = TLHN3->GetOutputFileName();
-  // cout<<"final_output_file_name3: "<<final_output_file_name3<<endl;
-  // system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", final_output_directory.c_str(), final_output_file_name3.c_str(), final_output_directory.c_str(), final_output_file_name3.c_str()));  
-
-  // TLHN3 -> MainProcess();
-  // TLHN3 -> EndRun();
-
-  // system(Form("mv %s/%s %s/completed", final_output_directory.c_str(), final_output_file_name3.c_str(), final_output_directory.c_str()));
-
   return 888;
 }
+
+
+// PassConfig.py -> my_new_flag: bool = False
+
+// generate_params_header() in run_pass.py -> f'  const bool        my_new_flag             = {_cpp_bool(cfg.my_new_flag)};',
+
+// Run_PrepareHist_template.C -> bool my_new_flag_in = PassParams::my_new_flag;
+// Run_PrepareHist_template.C -> the cout
+
+// pass_configs/*.py
