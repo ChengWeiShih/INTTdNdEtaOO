@@ -150,6 +150,14 @@ void ColumnCheck::MainProcess()
 
         if (MBD_centrality > SetMbinFloat) {continue;}
         if (MBD_z_vtx < VtxZRange.first || MBD_z_vtx > VtxZRange.second) {continue;}
+
+
+        if (runnumber == 82391){
+            if (BunchNumber == BunchNumber && std::find(Constants::selected_bunch_id.begin(),Constants::selected_bunch_id.end(), BunchNumber) == Constants::selected_bunch_id.end()){
+                // std::cout<<"Event with BunchNumber "<<BunchNumber<<" is rejected due to the bunch cut"<<std::endl;
+                continue;
+            }
+        }
         // =======================================================================================================================================================
 
         PrepareClusterVec();

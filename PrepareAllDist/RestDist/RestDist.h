@@ -128,6 +128,8 @@ class RestDist{
         int MBDNSg2_vtxZ10cm;
         int MBDNSg2_vtxZ30cm;
 
+        uint64_t BunchNumber;
+
         int InttBcoFullDiff_next; // note : for data
 
         // note : for MC

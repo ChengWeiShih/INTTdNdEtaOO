@@ -99,6 +99,8 @@ void vtxZDist::PrepareInputFile()
 
     tree_in -> SetBranchStatus("NClus", 1);
     tree_in -> SetBranchStatus("NClus_Layer1", 1);
+
+    tree_in -> SetBranchStatus("BunchNumber", 1);
     
     // note : for data
     if (branch_map.find("MBDNSg1") != branch_map.end()) {
@@ -129,6 +131,8 @@ void vtxZDist::PrepareInputFile()
 
     tree_in -> SetBranchAddress("NClus", &NClus);
     tree_in -> SetBranchAddress("NClus_Layer1", &NClus_Layer1);
+
+    tree_in -> SetBranchAddress("BunchNumber", &BunchNumber);
 
     // note : for data
     if (branch_map.find("MBDNSg1") != branch_map.end()) {tree_in -> SetBranchAddress("MBDNSg1", &MBDNSg1);}
@@ -505,6 +509,13 @@ void vtxZDist::PrepareEvent()
         if (Apply_cut && (TrapezoidalFitWidth < cut_TrapezoidalFitWidth.first || TrapezoidalFitWidth > cut_TrapezoidalFitWidth.second)){continue;}
         if (Apply_cut && (TrapezoidalFWHM < cut_TrapezoidalFWHM.first || TrapezoidalFWHM > cut_TrapezoidalFWHM.second)){continue;}
         if (Apply_cut && (INTTvtxZError < cut_INTTvtxZError.first || INTTvtxZError > cut_INTTvtxZError.second)){continue;}
+
+        if (runnumber == 82391){
+            if (BunchNumber == BunchNumber && std::find(Constants::selected_bunch_id.begin(),Constants::selected_bunch_id.end(), BunchNumber) == Constants::selected_bunch_id.end()){
+                // std::cout<<"Event with BunchNumber "<<BunchNumber<<" is rejected due to the bunch cut"<<std::endl;
+                continue;
+            }
+        }
 
         // =======================================================================================================================================================
         double INTTvtxZWeighting;

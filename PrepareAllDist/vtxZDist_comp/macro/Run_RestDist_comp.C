@@ -10,18 +10,18 @@ int comp1()
 
     std::vector<std::pair<std::string, std::pair<std::string,std::string>>> data_input_directory_pair_vec = {
         {
-            std::string("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/seflgendata/run_54280_HR_Feb102025/Run6_EvtZFitWidthChange/EvtVtxZ/completed/RestDist/completed") + 
-            "/Data_RestDist_vtxZQA_EvtBcoFullDiffCut61_vtxZRangeM10p0to10p0_00054280_merged_merged_001.root"
+            std::string("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality/RestDist/completed") + 
+            "/Data_RestDist_NovtxZQA_EvtBcoFullDiffCut80_vtxZRangeM10p0to10p0_00082391_merged.root"
             ,
             
-            {"Data, |Reco. VtxZ| < 10 cm, |BcoFullDiff| > 61", "Data"}
+            {"Data, |Reco. VtxZ| < 10 cm, |BcoFullDiff| > 80", "Data"}
         }
     };
 
     std::vector<std::pair<std::string, std::pair<std::string,std::string>>> MC_input_directory_pair_vec = {
         {
-            std::string("/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/Sim_HIJING_MDC2_ana472_20250307/Run7/EvtVtxZ/completed/RestDist/completed") + 
-            "/MC_RestDist_vtxZQA_VtxZReWeighting_vtxZRangeM10p0to10p0_merged.root",
+            std::string("/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/RestDist/completed") + 
+            "/MC_RestDist_NovtxZQA_VtxZReWeighting_vtxZRangeM10p0to10p0_merged.root",
             {"HIJING, |Reco. VtxZ| < 10 cm", "HIJING_ZWeight"}
         }
     };
@@ -31,7 +31,7 @@ int comp1()
             "Data",
             {
                 // std::make_tuple(0.22, 0.8, "Old vertex XY"),
-                std::make_tuple(0.22, 0.76, "w/ INTT vtxZ QA")
+                std::make_tuple(0.22, 0.76, "w/o INTT vtxZ QA")
             }
         },
 
@@ -39,7 +39,7 @@ int comp1()
             "MC",
             {
                 // std::make_tuple(0.22, 0.8, "Truth avg VtxXY"),
-                std::make_tuple(0.22, 0.76, "w/ INTT vtxZ QA"),
+                std::make_tuple(0.22, 0.76, "w/o INTT vtxZ QA"),
                 std::make_tuple(0.22, 0.72, "MC vtxZ Reweighted")
             }
         },
@@ -50,14 +50,14 @@ int comp1()
             {
                 // std::make_tuple(0.22, 0.8, "Data, Old vertex XY"),
                 // std::make_tuple(0.22, 0.76, "MC, Truth avg vtxXY"),
-                std::make_tuple(0.22, 0.72, "w/ INTT vtxZ QA"),
+                std::make_tuple(0.22, 0.72, "w/o INTT vtxZ QA"),
                 std::make_tuple(0.22, 0.68, "MC vtxZ Reweighted")
             }
         }
     };
     
 
-    std::string output_directory = "/sphenix/user/ChengWei/sPH_dNdeta/Run24AuAuMC/Sim_HIJING_MDC2_ana472_20250307/Run7/EvtVtxZ/completed/RestDist/completed/RestComp_VtxZCut_NoClusQA";
+    std::string output_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/RestDist/RestComp_NovtxZQA_VtxZCut_NoClusQA";
 
     bool WithVtxZReWeighting = false;
 
@@ -246,7 +246,7 @@ int comp3()
 int Run_RestDist_comp()
 {
     comp1();
-    comp2();
-    comp3();
+    // comp2();
+    // comp3();
     return 4;
 }

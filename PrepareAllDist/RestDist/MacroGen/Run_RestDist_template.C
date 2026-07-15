@@ -162,5 +162,41 @@ void Run_RestDist_template(
 
   system(Form("mv %s/%s %s/completed", output_directory.c_str(), final_output_file_name.c_str(), output_directory.c_str()));
 
+
+  // Division : ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  // note : No vtxZQA, vtxZ cut, No ClusQA, no rotated
+  RestDist * RDs4 = new RestDist(
+    process_id,
+    run_num,
+    nevents,
+    input_directory,
+    input_filename,
+    output_directory,
+
+    PassParams::output_file_name_suffix,
+    PassParams::vertexXYIncm,
+
+    false, // note : vtxZQA
+    PassParams::ApplyVtxZReWeighting,
+    PassParams::ApplyEvtBcoFullDiffCut,
+    
+    PassParams::RequireVtxZRange,
+    {false,{-10,20000}},
+
+    false // note : isRotated
+  );
+  if (PassParams::ApplyVtxZReWeighting) {RDs4->SetINTTvtxZReweighting(h1D_INTT_vtxZ_reweighting);}
+
+  final_output_file_name = RDs4->GetOutputFileName();
+  cout<<"final_output_file_name: "<<final_output_file_name<<endl;
+
+  system(Form("if [ -f %s/completed/%s ]; then rm %s/completed/%s; fi;", output_directory.c_str(), final_output_file_name.c_str(), output_directory.c_str(), final_output_file_name.c_str()));  
+
+  RDs4->PrepareEvent();
+  RDs4->EndRun();
+
+
+  system(Form("mv %s/%s %s/completed", output_directory.c_str(), final_output_file_name.c_str(), output_directory.c_str()));
+
   return;
 }

@@ -169,6 +169,8 @@ void RestDist::PrepareInputFile()
     tree_in -> SetBranchStatus("ClusEta_MBDz", 1);
     tree_in -> SetBranchStatus("ClusPhi_AvgPV", 1);
 
+    tree_in -> SetBranchStatus("BunchNumber", 1);
+
     // note : for MC
     if (branch_map.find("ClusEta_TrueXYZ") != branch_map.end()) {tree_in -> SetBranchStatus("ClusEta_TrueXYZ", 1);}
     if (branch_map.find("ClusPhi_TrueXY") != branch_map.end()) {tree_in -> SetBranchStatus("ClusPhi_TrueXY", 1);}
@@ -198,6 +200,8 @@ void RestDist::PrepareInputFile()
     tree_in -> SetBranchAddress("MBD_charge_asymm", &MBD_charge_asymm);
     tree_in -> SetBranchAddress("MBD_south_charge_sum", &MBD_south_charge_sum);
     tree_in -> SetBranchAddress("MBD_north_charge_sum", &MBD_north_charge_sum);
+
+    tree_in -> SetBranchAddress("BunchNumber", &BunchNumber);
 
     tree_in -> SetBranchAddress("INTTvtxZ", &INTTvtxZ);
     tree_in -> SetBranchAddress("INTTvtxZError", &INTTvtxZError);
@@ -610,6 +614,14 @@ void RestDist::PrepareEvent()
         if (Apply_cut && (TrapezoidalFitWidth < cut_TrapezoidalFitWidth.first || TrapezoidalFitWidth > cut_TrapezoidalFitWidth.second)){continue;}
         if (Apply_cut && (TrapezoidalFWHM < cut_TrapezoidalFWHM.first || TrapezoidalFWHM > cut_TrapezoidalFWHM.second)){continue;}
         if (Apply_cut && (INTTvtxZError < cut_INTTvtxZError.first || INTTvtxZError > cut_INTTvtxZError.second)){continue;}
+
+
+        if (runnumber == 82391){
+            if (BunchNumber == BunchNumber && std::find(Constants::selected_bunch_id.begin(),Constants::selected_bunch_id.end(), BunchNumber) == Constants::selected_bunch_id.end()){
+                // std::cout<<"Event with BunchNumber "<<BunchNumber<<" is rejected due to the bunch cut"<<std::endl;
+                continue;
+            }
+        }
 
         // =======================================================================================================================================================
         if (ApplyVtxZReWeighting && runnumber != -1){

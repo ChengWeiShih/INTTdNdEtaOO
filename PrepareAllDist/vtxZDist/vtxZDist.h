@@ -89,6 +89,7 @@ class vtxZDist{
         int NClus;
         int NClus_Layer1;
 
+        uint64_t BunchNumber;
 
         // note : for data?
         int MBDNSg1;
