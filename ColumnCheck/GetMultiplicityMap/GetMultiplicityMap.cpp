@@ -254,8 +254,11 @@ void GetMultiplicityMap::h2DNormalized()
         temp_h2D_data -> Sumw2(true);
         temp_h2D_MC -> Sumw2(true);
 
-        temp_h2D_data -> Scale(1. / temp_h2D_data -> GetBinContent(temp_h2D_data -> GetMaximumBin())); // note : this should work assuming there is no hot channel
-        temp_h2D_MC -> Scale(1. / temp_h2D_MC -> GetBinContent(temp_h2D_MC -> GetMaximumBin()));
+        NormalizeTH2DByMajorityAverage(temp_h2D_data);
+        NormalizeTH2DByMajorityAverage(temp_h2D_MC);
+
+        // temp_h2D_data -> Scale(1. / temp_h2D_data -> GetBinContent(temp_h2D_data -> GetMaximumBin())); // note : this should work assuming there is no hot channel
+        // temp_h2D_MC -> Scale(1. / temp_h2D_MC -> GetBinContent(temp_h2D_MC -> GetMaximumBin()));
     }
 }
 
@@ -271,9 +274,11 @@ void GetMultiplicityMap::DataMCDivision()
         TH2D * temp_h2D_data = h2D_target_map[Form("h2D_ClusCountLayerPhiId_ZId%d",i)].first; // note : X: Layer {3 - 7}, Y: PhiId {0 -16}
         TH2D * temp_h2D_MC = h2D_target_map[Form("h2D_ClusCountLayerPhiId_ZId%d",i)].second; // note : X: Layer {3 - 7}, Y: PhiId {0 -16}
 
-        h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] = (TH2D*) temp_h2D_data -> Clone(Form("h2D_RatioLayerPhiId_ZId%d",i));
+        // h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] = (TH2D*) temp_h2D_data -> Clone(Form("h2D_RatioLayerPhiId_ZId%d",i));
+        // h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] -> Divide(temp_h2D_data, temp_h2D_MC, 1, 1);
+
+        h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] = GetBestAgreementRatio(temp_h2D_data, temp_h2D_MC, Form("h2D_RatioLayerPhiId_ZId%d",i));
         h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] -> SetTitle(Form("h2D_RatioLayerPhiId_ZId%d",i));
-        h2D_map[Form("h2D_RatioLayerPhiId_ZId%d",i)] -> Divide(temp_h2D_data, temp_h2D_MC, 1, 1);
 
         h1D_map[Form("h1D_Ratio_ZId%d",i)] = new TH1D(Form("h1D_Ratio_ZId%d",i),Form("h1D_Ratio_ZId%d;Multiplicity Ratio (data/MC);Entries",i), 100, 0, 2);
 
@@ -377,4 +382,169 @@ void GetMultiplicityMap::EndRun()
 
 
     file_out -> Close();
+}
+
+
+void GetMultiplicityMap::NormalizeTH2DByMajorityAverage(TH2D *hist, const double trimFraction)
+{
+  if (hist == nullptr)
+  {
+    throw std::runtime_error("NormalizeTH2DByMajorityAverage: null input histogram");
+  }
+
+  std::vector<double> binContents;
+  for (int ix = 1; ix <= hist->GetNbinsX(); ++ix)
+  {
+    for (int iy = 1; iy <= hist->GetNbinsY(); ++iy)
+    {
+      const double content = hist->GetBinContent(ix, iy);
+      if (std::isfinite(content) && content > 0.0)
+      {
+        binContents.push_back(content);
+      }
+    }
+  }
+
+  if (binContents.empty())
+  {
+    throw std::runtime_error("NormalizeTH2DByMajorityAverage: no positive finite bins found");
+  }
+
+  std::sort(binContents.begin(), binContents.end());
+
+  int nTrim = static_cast<int>(trimFraction * static_cast<double>(binContents.size()));
+  if (2 * nTrim >= static_cast<int>(binContents.size()))
+  {
+    nTrim = 0;
+  }
+
+  double sum = 0.0;
+  int nUsed = 0;
+  for (int i = nTrim; i < static_cast<int>(binContents.size()) - nTrim; ++i)
+  {
+    sum += binContents[i];
+    ++nUsed;
+  }
+
+  const double majorityAverage = sum / static_cast<double>(nUsed);
+  const double normalizationFactor = 1.0 / majorityAverage;
+  hist->Scale(normalizationFactor);
+
+  std::cout << "Normalize " << hist->GetName()
+            << ": majority average = " << majorityAverage
+            << ", factor = " << normalizationFactor
+            << ", bins used = " << nUsed << " / " << binContents.size()
+            << std::endl;
+}
+
+TH2D * GetMultiplicityMap::GetBestAgreementRatio(
+                            const TH2D *histToScale,
+                            const TH2D *referenceHist,
+                            const std::string &ratioHistName,
+                            const double minScale,
+                            const double maxScale,
+                            const int nScanSteps,
+                            const double unityTolerance)
+{
+  if (referenceHist == nullptr || histToScale == nullptr)
+  {
+    throw std::runtime_error("GetBestAgreementRatio: null input histogram");
+  }
+
+  if (referenceHist->GetNbinsX() != histToScale->GetNbinsX() ||
+      referenceHist->GetNbinsY() != histToScale->GetNbinsY())
+  {
+    throw std::runtime_error("GetBestAgreementRatio: input TH2Ds do not have the same dimensions");
+  }
+
+  if (minScale <= 0.0 || maxScale <= minScale || nScanSteps <= 0)
+  {
+    throw std::runtime_error("GetBestAgreementRatio: invalid scan range");
+  }
+
+  TH2D *referenceNorm = static_cast<TH2D *>(referenceHist->Clone((ratioHistName + "hReference_majorityNorm_for_scan").c_str()));
+  TH2D *histToScaleNorm = static_cast<TH2D *>(histToScale->Clone((ratioHistName + "hToScale_majorityNorm_for_scan").c_str()));
+
+  double bestScale = minScale;
+  int bestNCloseToUnity = -1;
+  double bestMeanAbsLogRatio = std::numeric_limits<double>::infinity();
+  int bestNBinsUsed = 0;
+
+  for (int i = 0; i <= nScanSteps; ++i)
+  {
+    const double scale = minScale + (maxScale - minScale) * static_cast<double>(i) / static_cast<double>(nScanSteps);
+    int nCloseToUnity = 0;
+    int nBinsUsed = 0;
+    double sumAbsLogRatio = 0.0;
+
+    for (int ix = 1; ix <= referenceNorm->GetNbinsX(); ++ix)
+    {
+      for (int iy = 1; iy <= referenceNorm->GetNbinsY(); ++iy)
+      {
+        const double denominator = referenceNorm->GetBinContent(ix, iy);
+        const double numerator = scale * histToScaleNorm->GetBinContent(ix, iy);
+
+        if (denominator <= 0.0 || numerator <= 0.0)
+        {
+          continue;
+        }
+
+        const double ratio = numerator / denominator;
+        ++nBinsUsed;
+        sumAbsLogRatio += std::fabs(std::log(ratio));
+
+        if (std::fabs(ratio - 1.0) < unityTolerance)
+        {
+          ++nCloseToUnity;
+        }
+      }
+    }
+
+    const double meanAbsLogRatio = (nBinsUsed > 0)
+                                     ? sumAbsLogRatio / static_cast<double>(nBinsUsed)
+                                     : std::numeric_limits<double>::infinity();
+
+    const bool moreBinsClose = nCloseToUnity > bestNCloseToUnity;
+    const bool sameBinsBetterAverage = nCloseToUnity == bestNCloseToUnity &&
+                                       meanAbsLogRatio < bestMeanAbsLogRatio;
+
+    if (moreBinsClose || sameBinsBetterAverage)
+    {
+      bestScale = scale;
+      bestNCloseToUnity = nCloseToUnity;
+      bestMeanAbsLogRatio = meanAbsLogRatio;
+      bestNBinsUsed = nBinsUsed;
+    }
+  }
+
+  TH2D *ratioHist = static_cast<TH2D *>(referenceNorm->Clone(ratioHistName.c_str()));
+  ratioHist->Reset("ICES");
+  ratioHist->SetTitle(Form("Best ratio: %.6g * %s / %s",
+                           bestScale,
+                           histToScaleNorm->GetName(),
+                           referenceNorm->GetName()));
+
+  for (int ix = 1; ix <= referenceNorm->GetNbinsX(); ++ix)
+  {
+    for (int iy = 1; iy <= referenceNorm->GetNbinsY(); ++iy)
+    {
+      const double denominator = referenceNorm->GetBinContent(ix, iy);
+      if (denominator == 0.0)
+      {
+        ratioHist->SetBinContent(ix, iy, 0.0);
+        continue;
+      }
+
+      const double numerator = bestScale * histToScaleNorm->GetBinContent(ix, iy);
+      ratioHist->SetBinContent(ix, iy, numerator / denominator);
+    }
+  }
+
+  std::cout << "Best residual scale after normalization = " << bestScale << std::endl;
+  std::cout << "Bins close to unity = " << bestNCloseToUnity
+            << " / " << bestNBinsUsed
+            << " for tolerance " << unityTolerance << std::endl;
+  std::cout << "Mean |log(ratio)| = " << bestMeanAbsLogRatio << std::endl;
+
+  return ratioHist;
 }

@@ -203,7 +203,7 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
 
     for (int eta = 0; eta <= 10; eta++)
     {
-        for (int phi = 0; phi <= 15; phi++)
+        for (int phi = 0; phi <= 39; phi++)
         {
             TString nameBase = Form("h1D_DeltaPhi_Phibin%d_Eta%d_VtxZ0", phi, eta);
             TH1D *hSig = (TH1D*)fin->Get(nameBase);
@@ -360,6 +360,8 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
     // Task 8 summary
     h1D_DeltaPhi_IntegralEta->Write();
 
+    h1D_DeltaPhi_IntegralEta_normalized->Write();
+
     // Task 1
     h2D_GoodProtoTracklet_EtaPhi_Subtracted->Write();
 
@@ -374,7 +376,7 @@ void InttDoubletMap(TString inputPath = "/sphenix/tg/tg01/commissioning/INTT/wor
 
     // Task 9 canvases
     for (int eta = 0; eta <= 10; eta++) {
-        for (int phi = 0; phi <= 15; phi++) {
+        for (int phi = 0; phi <= 39; phi++) {
             TCanvas *c = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(Form("c_DeltaPhi_Phibin%d_Eta%d_VtxZ0", phi, eta));
             if (c) c->Write();
         }

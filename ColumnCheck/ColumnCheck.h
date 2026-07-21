@@ -2,13 +2,13 @@
 #define COLUMNCHECK_H
 
 
-#include "../ClusHistogram/ClusHistogram.h"
+#include "../ClusHistogram/ClusBased.h"
 
 #include "../EvtVtxZTracklet/structure.h"
 
 #include "../Constants.h"
 
-class ColumnCheck : public ClusHistogram{
+class ColumnCheck : public ClusBased{
     public:
         ColumnCheck(
             int process_id_in,

@@ -21,8 +21,8 @@ _delta_phi_cut    = 0.15
 _subfoldername    = "baseline"
 
 # note: need to check z-weight file and column mask file for AlignP
-# _pass_name        = "InttDoublet_HIJING_zweight_trigcorr_WithAlignP"
-_pass_name        = "InttDoublet_HIJING_zweight_trigcorr"
+_pass_name        = "InttDoublet_HIJING_zweight_trigcorr_WithAlignP"
+# _pass_name        = "InttDoublet_HIJING_zweight_trigcorr"
 
 _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex"
 
@@ -61,8 +61,8 @@ cfg = PassConfig(
     TrigEffiWeight_hist = "h1D_MBD_centrality",
     
     vtxZReweight    = True,        # plain bool: True = enable vtxZ reweighting
-    zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
-    # zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/AlignP_vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
+    # zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
+    zvtx_weight_dir  = _mother_directory + "/VtxZDist/completed/AlignP_vtxZ_comp_NoVtxZQA",           # only needed when vtxZReweight=True
     zvtx_weight_file = "INTTvtxZReWeight.root",
     zvtx_weight_hist = "HIJING_noZWeight_NoVtxZQA_Inclusive70_tight",
     INTT_vtxZ_QA   = False,
@@ -76,8 +76,8 @@ cfg = PassConfig(
 
     # ── ColMulMask map (only needed when ColMulMask=True) ─────────────────────
     
-    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
-    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
+    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
+    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
     ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root",
 
     # ── HTCondor ─────────────────────────────────────────────────────────────

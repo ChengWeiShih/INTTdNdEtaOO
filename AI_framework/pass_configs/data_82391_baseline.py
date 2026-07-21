@@ -23,8 +23,8 @@ _subfoldername    = "baseline"
 _pass_name        = "InttDoublet_zweight_trigcorr"
 
 #note: AlignP, need to check, the vertexXY, the column mask, 
-_mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality"
-# _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_LoacalPos_PrivateCentrality"
+# _mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82391/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality"
+_mother_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82391/test_82391_LoacalPos_PrivateCentrality"
 
 cfg = PassConfig(
 
@@ -43,8 +43,8 @@ cfg = PassConfig(
 
     # ── InttDoubletMap parameters ────────────────────────────────────────────
     output_file_name_suffix = "",
-    vertexXYIncm    = (-0.05156, 0.13594),   # beam-spot (x,y) in cm, survey only
-    # vertexXYIncm    = (-0.04844, 0.11719),   # beam-spot (x,y) in cm, w/ AlignP
+    # vertexXYIncm    = (-0.05156, 0.13594),   # beam-spot (x,y) in cm, survey only
+    vertexXYIncm    = (-0.04844, 0.11719),   # beam-spot (x,y) in cm, w/ AlignP
     
     data_type       = 0,                    # 2 = streaming_data
     isUsedMBDz      = False,
@@ -76,8 +76,8 @@ cfg = PassConfig(
 
     # ── ColMulMask map (only needed when ColMulMask=True) ─────────────────────
     
-    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
-    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
+    # ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap/completed",
+    ColMulMask_map_dir  = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/ColumnCheck/baseline/completed/MulMap_WithAlignP/completed",
     ColMulMask_map_file = "MulMap_BcoFullDiffCut_Mbin55_VtxZ-30to30cm_ClusQAAdc30PhiSize40_00082391.root",
 
     # ── HTCondor ─────────────────────────────────────────────────────────────

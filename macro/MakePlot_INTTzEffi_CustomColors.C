@@ -4,7 +4,7 @@
 int MakePlot_INTTzEffi_CustomColors()
 {
     // --- Configuration ---
-    std::string input_file_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260215/HIJING_INTTSurveyOnly_CentralityScaleTest/VtxZDist/completed"; 
+    std::string input_file_directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/VtxZDist/completed"; 
     std::string input_file_name = "MC_vtxZDist_NoVtxZQA_merged.root";
     std::string target_plot_truth_name = "h2D_TruthCount_TruthZ_Centrality";
     std::string target_plot2_reco_name = "h2D_GoodRecoZ_TruthZ_Centrality";

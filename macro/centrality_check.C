@@ -3,8 +3,11 @@ int quick_check(){
     // std::string directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/MC/20260608/HIJING_INTTSurveyOnly_CentralityScaleTest_customizedVertex/per5k";
     // std::string intput_filename = "ntuple_per5k_000*.root";
 
-    std::string directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality/EvtVtxZ/completed";
-    std::string intput_filename = "Data_EvtVtxZProtoTracklet_FieldOn_BcoFullDiff_VtxZReco_00082391_0000*.root";
+    // std::string directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/test_82391_INTTsurveyOnly_LoacalPos_PrivateCentrality/EvtVtxZ/completed";
+    // std::string intput_filename = "Data_EvtVtxZProtoTracklet_FieldOn_BcoFullDiff_VtxZReco_00082391_000*.root";
+
+    std::string directory = "/sphenix/tg/tg01/commissioning/INTT/work/cwshih/Run25/dNdEtaOO/82525/ForCentrality/completed";
+    std::string intput_filename = "Ntuple_00082525_standalone_ana551_000*.root";
 
     TChain * chain = new TChain("EventTree");
     chain -> Add(Form("%s/%s",directory.c_str(), intput_filename.c_str()));
@@ -37,11 +40,16 @@ int quick_check(){
     chain->Draw("MBD_centrality_privateFit>>h1D_MBD_centrality_privateFit(100,0,100)","is_min_bias_private_MinDeposit == 1","",100000);
     TH1D *h1D_MBD_centrality_privateFit = (TH1D*) gDirectory->Get("h1D_MBD_centrality_privateFit");
 
+    chain->Draw("MBD_north_charge_sum:MBD_south_charge_sum>>h2D_MBDcharge_south_north(200,0,400,200,0,400)","","");
+    TH1D *h2D_MBDcharge_south_north = (TH1D*) gDirectory->Get("h2D_MBDcharge_south_north");
+    h2D_MBDcharge_south_north->SetTitle(";MBD charge sum (south);MBD charge sum (north)");
+
     TFile * file_out = new TFile(Form("%s/Centrality_check.root",directory.c_str()), "RECREATE");
     
     h2D_centralityPriate -> Write();
     h1D_MBD_centrality_private -> Write();
     h1D_MBD_centrality_privateFit -> Write();
+    h2D_MBDcharge_south_north->Write();
 
     file_out -> Close();
 

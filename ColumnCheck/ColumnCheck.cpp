@@ -19,7 +19,7 @@ ColumnCheck::ColumnCheck(
 
     bool ColMulMask_in
 
-) : ClusHistogram(
+) : ClusBased(
     process_id_in,
     runnumber_in,
     run_nEvents_in,
@@ -164,9 +164,9 @@ void ColumnCheck::MainProcess()
 
         for (int barrel_i = 0; barrel_i < 2; barrel_i++)
         {
-            std::vector<ClusHistogram::clu_info> &this_vec = (barrel_i == 0) ? evt_sPH_inner_nocolumn_vec : evt_sPH_outer_nocolumn_vec;
+            std::vector<ClusBased::clu_info> &this_vec = (barrel_i == 0) ? evt_sPH_inner_nocolumn_vec : evt_sPH_outer_nocolumn_vec;
 
-            for (ClusHistogram::clu_info this_clu : this_vec)
+            for (ClusBased::clu_info this_clu : this_vec)
             {
                 int ZID = h1D_map["h1D_ClusZ"] -> Fill(this_clu.columnZID) - 1;
                 if (ZID == -2) {continue;}

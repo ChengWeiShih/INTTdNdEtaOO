@@ -114,6 +114,18 @@ class GetMultiplicityMap{
         int nZbin = Constants::nZbin;
         double Zmin = Constants::Zmin;
         double Zmax = Constants::Zmax;
+
+        // note: for normalization
+        void NormalizeTH2DByMajorityAverage(TH2D *hist, const double trimFraction = 0.10);
+        TH2D *GetBestAgreementRatio(
+            const TH2D *histToScale,
+            const TH2D *referenceHist,
+            const std::string &ratioHistName = "hRatio_after_best_scaling",
+            const double minScale = 0.1,
+            const double maxScale = 3.0,
+            const int nScanSteps = 2900,
+            const double unityTolerance = 0.10
+        );
 };
 
 #endif

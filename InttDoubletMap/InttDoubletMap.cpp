@@ -32,7 +32,7 @@ InttDoubletMap::InttDoubletMap(
 
     bool HaveGeoOffsetTag_in
     
-) : ClusHistogram(
+) : ClusBased(
     process_id_in,
     runnumber_in,
     run_nEvents_in,
@@ -238,7 +238,7 @@ void InttDoubletMap::PrepareHistograms()
     {
         for (int vtxz_bin = 0; vtxz_bin < 1; vtxz_bin++)
         {
-            for (int Phibin = 0; Phibin < 16; Phibin++)
+            for (int Phibin = 0; Phibin < 40; Phibin++)
             {
                 h1D_map.insert( std::make_pair(
                         Form("h1D_DeltaPhi_Phibin%d_Eta%d_VtxZ%d", Phibin, eta_bin, vtxz_bin),
@@ -288,7 +288,7 @@ void InttDoubletMap::PrepareHistograms()
     
     h1D_eta_template_wide = new TH1D("h1D_eta_template_wide", "h1D_eta_template_wide", nEtaBin, EtaEdge_min, EtaEdge_max); // note : coarse
     h1D_eta_bin = new TH1D("h1D_eta_bin","h1D_eta_bin;Pair #eta;Entries",11,-1.1,1.1);
-    h1D_phi_bin = new TH1D("h1D_phi_bin","h1D_phi_bin;Phi [radian];Entries",16,-3.2,3.2);
+    h1D_phi_bin = new TH1D("h1D_phi_bin","h1D_phi_bin;Phi [radian];Entries",40,-3.2,3.2);
     h1D_nEvent = new TH1D("h1D_nEvent","h1D_nEvent;Event Count (0: no weight, 1:W_{Trig}, 2:W_{vtxZ}*W_{Trig});Entries",3,-0.5,2.5);
     h1D_BunchNumber = new TH1D("h1D_BunchNumber","h1D_BunchNumber;Selected BunchNumber;Entries",150,-20,130);
     h1D_MBDChargeSum = new TH1D("h1D_MBDChargeSum","h1D_MBDChargeSum;Selected MBD Charged Sum;Entries",250, 0, 500);
@@ -322,19 +322,19 @@ void InttDoubletMap::PrepareHistograms()
 
     h2D_map.insert( std::make_pair(
             Form("h2D_GoodProtoTracklet_EtaPhi"),
-            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi"), Form("h2D_GoodProtoTracklet_EtaPhi;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi"), Form("h2D_GoodProtoTracklet_EtaPhi;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 40,-3.2,3.2) 
         )
     );
 
     h2D_map.insert( std::make_pair(
             Form("h2D_GoodProtoTracklet_EtaPhi_rotated"),
-            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi_rotated"), Form("h2D_GoodProtoTracklet_EtaPhi_rotated;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_GoodProtoTracklet_EtaPhi_rotated"), Form("h2D_GoodProtoTracklet_EtaPhi_rotated;Pair #eta;Phi [radian]"), 11,-1.1,1.1, 40,-3.2,3.2) 
         )
     );
 
     h2D_map.insert( std::make_pair(
             Form("h2D_Truth_ChargedHadron_EtaPhi"),
-            new TH2D(Form("h2D_Truth_ChargedHadron_EtaPhi"), Form("h2D_Truth_ChargedHadron_EtaPhi;Charged hadron #eta;Charged hadron Phi [radian]"), 11,-1.1,1.1, 16,-3.2,3.2) 
+            new TH2D(Form("h2D_Truth_ChargedHadron_EtaPhi"), Form("h2D_Truth_ChargedHadron_EtaPhi;Charged hadron #eta;Charged hadron Phi [radian]"), 11,-1.1,1.1, 40,-3.2,3.2) 
         )
     );
 
@@ -360,8 +360,8 @@ void InttDoubletMap::EvtCleanUp()
 
     inner_clu_phi_map.clear();
     outer_clu_phi_map.clear();
-    inner_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>>(360);
-    outer_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>>(360);
+    inner_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>>(360);
+    outer_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>>(360);
 }
 
 void InttDoubletMap::GetTrackletPair(std::vector<pair_str> &input_TrackletPair_vec, bool isRotated)
@@ -370,12 +370,12 @@ void InttDoubletMap::GetTrackletPair(std::vector<pair_str> &input_TrackletPair_v
 
     inner_clu_phi_map.clear();
     outer_clu_phi_map.clear();
-    inner_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>>(360);
-    outer_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>>(360);
+    inner_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>>(360);
+    outer_clu_phi_map = std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>>(360);
 
     if (INTTvtxZ != INTTvtxZ || INTTvtxZError != INTTvtxZError) {return;}
 
-    std::vector<ClusHistogram::clu_info> temp_evt_sPH_inner_nocolumn_vec = (isRotated) ? GetRotatedClusterVec(evt_sPH_inner_nocolumn_vec) : evt_sPH_inner_nocolumn_vec;
+    std::vector<ClusBased::clu_info> temp_evt_sPH_inner_nocolumn_vec = (isRotated) ? GetRotatedClusterVec(evt_sPH_inner_nocolumn_vec) : evt_sPH_inner_nocolumn_vec;
 
     for (int inner_i = 0; inner_i < int(temp_evt_sPH_inner_nocolumn_vec.size()); inner_i++) {
       double Clus_InnerPhi_Offset = (temp_evt_sPH_inner_nocolumn_vec[inner_i].y - vertexXYIncm.second < 0) ? atan2(temp_evt_sPH_inner_nocolumn_vec[inner_i].y - vertexXYIncm.second, temp_evt_sPH_inner_nocolumn_vec[inner_i].x - vertexXYIncm.first) * (180./TMath::Pi()) + 360 : atan2(temp_evt_sPH_inner_nocolumn_vec[inner_i].y - vertexXYIncm.second, temp_evt_sPH_inner_nocolumn_vec[inner_i].x - vertexXYIncm.first) * (180./TMath::Pi());
@@ -394,7 +394,7 @@ void InttDoubletMap::GetTrackletPair(std::vector<pair_str> &input_TrackletPair_v
         {
             if (inner_clu_phi_map[inner_phi_i][inner_phi_clu_i].first == true) {continue;}
 
-            ClusHistogram::clu_info inner_clu = inner_clu_phi_map[inner_phi_i][inner_phi_clu_i].second;
+            ClusBased::clu_info inner_clu = inner_clu_phi_map[inner_phi_i][inner_phi_clu_i].second;
 
             double Clus_InnerPhi_Offset_radian = atan2(inner_clu.y - vertexXYIncm.second, inner_clu.x - vertexXYIncm.first);
             double Clus_InnerPhi_Offset = (inner_clu.y - vertexXYIncm.second < 0) ? Clus_InnerPhi_Offset_radian * (180./TMath::Pi()) + 360 : Clus_InnerPhi_Offset_radian * (180./TMath::Pi());
@@ -411,7 +411,7 @@ void InttDoubletMap::GetTrackletPair(std::vector<pair_str> &input_TrackletPair_v
                 {
                     if (outer_clu_phi_map[true_scan_i][outer_phi_clu_i].first == true) {continue;}
 
-                    ClusHistogram::clu_info outer_clu = outer_clu_phi_map[true_scan_i][outer_phi_clu_i].second;
+                    ClusBased::clu_info outer_clu = outer_clu_phi_map[true_scan_i][outer_phi_clu_i].second;
 
                     double Clus_OuterPhi_Offset_radian = atan2(outer_clu.y - vertexXYIncm.second, outer_clu.x - vertexXYIncm.first);
                     double Clus_OuterPhi_Offset = (outer_clu.y - vertexXYIncm.second < 0) ? Clus_OuterPhi_Offset_radian * (180./TMath::Pi()) + 360 : Clus_OuterPhi_Offset_radian * (180./TMath::Pi());
@@ -762,12 +762,12 @@ void InttDoubletMap::MainProcess()
 
         h1D_map["h1D_InttVtxZ"] -> Fill(INTTvtxZ, INTTvtxZWeighting * TrigEffiCorrection_weight);
 
-        for (ClusHistogram::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
+        for (ClusBased::clu_info this_clu : evt_sPH_inner_nocolumn_vec){
             h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting * TrigEffiCorrection_weight);
             h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz, INTTvtxZWeighting * TrigEffiCorrection_weight);
         }
 
-        for (ClusHistogram::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
+        for (ClusBased::clu_info this_clu : evt_sPH_outer_nocolumn_vec){
             h2D_map["h2D_Clus_ColumnZID_LayerPhiID"] -> Fill(this_clu.columnZID, (this_clu.layerID - 3) * 20 + this_clu.ladderPhiID, INTTvtxZWeighting * TrigEffiCorrection_weight);
             h1D_ClusEtaInttZ -> Fill(this_clu.eta_INTTz, INTTvtxZWeighting * TrigEffiCorrection_weight);
         } 
@@ -823,19 +823,19 @@ void InttDoubletMap::EndRun()
     file_out -> Close();
 }
 
-std::vector<ClusHistogram::clu_info> InttDoubletMap::GetRotatedClusterVec(std::vector<ClusHistogram::clu_info> input_cluster_vec)
+std::vector<ClusBased::clu_info> InttDoubletMap::GetRotatedClusterVec(std::vector<ClusBased::clu_info> input_cluster_vec)
 {
-    std::vector<ClusHistogram::clu_info> output_cluster_vec; output_cluster_vec.clear();
+    std::vector<ClusBased::clu_info> output_cluster_vec; output_cluster_vec.clear();
 
-    for (ClusHistogram::clu_info this_clu : input_cluster_vec)
+    for (ClusBased::clu_info this_clu : input_cluster_vec)
     {
         std::pair<double,double> rotated_xy = rotatePoint(this_clu.x, this_clu.y);
      
-        ClusHistogram::clu_info rotated_clu = this_clu;
+        ClusBased::clu_info rotated_clu = this_clu;
         rotated_clu.x = rotated_xy.first;
         rotated_clu.y = rotated_xy.second;
 
-        rotated_clu.eta_INTTz = ClusHistogram::get_clu_eta({vertexXYIncm.first, vertexXYIncm.second, INTTvtxZ}, {rotated_clu.x, rotated_clu.y, rotated_clu.z});
+        rotated_clu.eta_INTTz = ClusBased::get_clu_eta({vertexXYIncm.first, vertexXYIncm.second, INTTvtxZ}, {rotated_clu.x, rotated_clu.y, rotated_clu.z});
 
         output_cluster_vec.push_back(rotated_clu);
     }

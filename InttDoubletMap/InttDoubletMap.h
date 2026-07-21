@@ -1,13 +1,13 @@
 #ifndef INTTDOUBLETMAP_H
 #define INTTDOUBLETMAP_H
 
-#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/ClusHistogram/ClusHistogram.h"
+#include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/ClusHistogram/ClusBased.h"
 
 #include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/EvtVtxZTracklet/structure.h"
 
 #include "/sphenix/user/ChengWei/INTT/INTTdNdEtaOO/Constants.h"
 
-class InttDoubletMap : public ClusHistogram{
+class InttDoubletMap : public ClusBased{
     public:
         InttDoubletMap(
             int process_id_in,
@@ -82,8 +82,8 @@ class InttDoubletMap : public ClusHistogram{
         // note : ----------------- for the analysis -----------------
         std::vector<pair_str> evt_TrackletPair_vec;
         std::vector<pair_str> evt_TrackletPairRotate_vec; 
-        std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>> inner_clu_phi_map;
-        std::vector<std::vector<std::pair<bool,ClusHistogram::clu_info>>> outer_clu_phi_map;
+        std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>> inner_clu_phi_map;
+        std::vector<std::vector<std::pair<bool,ClusBased::clu_info>>> outer_clu_phi_map;
 
         void GetTrackletPair(std::vector<pair_str> &input_TrackletPair_vec, bool isRotated);
         void FillPairs(std::vector<pair_str> input_TrackletPair_vec, bool isRotated, double vtxZ_weight_in, double TrigEffiCorrWeight_in, int eID_in);
@@ -95,7 +95,7 @@ class InttDoubletMap : public ClusHistogram{
         double grEY_stddev(TGraphErrors * input_grr);
         std::pair<double, double> mirrorPolynomial(double a, double b);
         std::pair<double, double> rotatePoint(double x, double y);
-        std::vector<ClusHistogram::clu_info> GetRotatedClusterVec(std::vector<ClusHistogram::clu_info> input_cluster_vec);
+        std::vector<ClusBased::clu_info> GetRotatedClusterVec(std::vector<ClusBased::clu_info> input_cluster_vec);
         double Get_extrapolation(double given_y, double p0x, double p0y, double p1x, double p1y); // note : x : z, y : r
         
         TGraphErrors * track_gr;
